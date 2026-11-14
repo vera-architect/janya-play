@@ -287,7 +287,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 @keyframes askIn{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes ringP{0%,100%{box-shadow:0 0 0 0 rgba(123,227,138,.6)}50%{box-shadow:0 0 0 10px rgba(123,227,138,0)}}
 #callBar{position:fixed;right:8px;top:172px;z-index:41;display:none;flex-direction:column;align-items:stretch;gap:3px;width:118px;padding:7px 7px 6px;box-sizing:border-box;border-radius:14px;background:rgba(10,24,34,.9);border:2px solid #5ad0ff;color:#e8f8ff;font-size:12px;text-align:center}
-#callBar.live{border-color:#7be38a}#callBar .cn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}#cbT{font-weight:800;font-size:14px;color:#bfefff}#callBar.live #cbT{color:#a8f5b2}
+#callBar.live{border-color:#7be38a}#callBar.re{border-color:#ffb040}#callBar.re #cbT{color:#ffd08a}#callBar .cbe{display:none;gap:4px}#callBar.ended{border-color:#8a96a6}#callBar.ended .cbb{display:none}#callBar.ended .cbe{display:flex}#callBar.ended #cbT{color:#d8dde6;font-size:12px;font-weight:700;line-height:1.3}#callBar .cbe span{flex:1;height:32px;line-height:32px;border-radius:9px;background:#24354a;font-size:12.5px;font-weight:700;cursor:pointer;touch-action:none}#cbRe{background:#2f9e5a!important;color:#fff}#callBar .cn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}#cbT{font-weight:800;font-size:14px;color:#bfefff}#callBar.live #cbT{color:#a8f5b2}
 #callBar .cbb{display:flex;gap:4px}#callBar .cbb span{flex:1;height:32px;line-height:32px;border-radius:9px;background:#24354a;font-size:16px;cursor:pointer;touch-action:none}
 #callBar .cbb span.off{background:#5a3a2a}#callBar .cbb span.on{background:#2f6a3a}#cbEnd{background:#9a3040!important;color:#fff}
 .pAct{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}.pb{display:inline-block;padding:5px 10px;border-radius:9px;background:#24354a;border:1px solid #5ad0ff;font-size:12.5px;font-weight:700;cursor:pointer}.pb.on{background:#2f6a3a;border-color:#7be38a}
@@ -4044,7 +4044,7 @@ function ptTick(){ if(!MP.room&&!DBG.fakePeers) return; const now=Date.now(), ps
 setInterval(()=>{ try{ ptTick(); }catch(e){ console.warn('pty',e); } },400);
 
 /* ---- 음성 통화 ---- */
-const CALL={st:'',peer:'',nm:'',id:'',pc:null,ms:null,q:[],t0:0,mute:false,ringT:0,gone:0,ring:null};
+const CALL={log:[],last:null,out:0,reT0:0,st:'',peer:'',nm:'',id:'',pc:null,ms:null,q:[],t0:0,mute:false,ringT:0,gone:0,ring:null};
 const canCall=()=>!!(MP.room&&MP.room.ext&&MP.room.sig&&window.RTCPeerConnection&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
 const ICE_CFG={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]};
 const callSig=(k,o={})=>{ if(MP.room&&MP.room.sig&&CALL.peer) MP.room.sig(CALL.peer,{k,id:CALL.id,...o}); };
@@ -4052,51 +4052,74 @@ async function callMic(){ try{ return await navigator.mediaDevices.getUserMedia(
 async function callStart(peer){ cardClose(); if(!canCall()) return toast('📞 전화는 GitHub 판에서만 된다','vera-architect.github.io/janya-play'); if(CALL.st) return toast('이미 통화 중이다');
   const p=mpPeers().find(q=>q.peer===peer); if(!p) return toast('그 사람이 지금 안 보인다');
   CALL.st='mic'; const ms=await callMic(); if(!ms){ CALL.st=''; return; } if(CALL.st!=='mic'){ ms.getTracks().forEach(t=>t.stop()); return; }
-  Object.assign(CALL,{st:'out',peer,nm:mpName(p),id:rid(6),ms,q:[],mute:false,gone:0}); callSig('ring',{nm:MP.myNm||''}); callUI();
+  Object.assign(CALL,{st:'out',out:1,peer,nm:mpName(p),id:rid(6),ms,q:[],mute:false,gone:0,t0:0,last:null}); callSig('ring',{nm:MP.myNm||''}); callUI();
   clearTimeout(CALL.ringT); CALL.ringT=setTimeout(()=>{ if(CALL.st==='out') callEnd(`${CALL.nm}가 받지 않았다`); },30000); }
 function callPc(){ const pc=new RTCPeerConnection(ICE_CFG); CALL.pc=pc; for(const t of CALL.ms.getTracks()) pc.addTrack(t,CALL.ms);
   pc.onicecandidate=e=>{ if(e.candidate) callSig('ice',{c:e.candidate.toJSON()}); };
   pc.ontrack=e=>{ const au=callAu(); au.srcObject=e.streams[0]||new MediaStream([e.track]); const pl=au.play(); if(pl&&pl.catch) pl.catch(()=>{ CALL.needTap=1; callUI(); }); };
   pc.onconnectionstatechange=()=>{ const s=pc.connectionState; if(pc!==CALL.pc) return;
-    if(s==='connected'&&CALL.st!=='on'){ CALL.st='on'; CALL.t0=performance.now(); clearTimeout(CALL.ringT); callDuck(true); toast(`📞 ${CALL.nm}와 연결됐다`,'이어폰을 끼면 게임 소리가 안 넘어간다'); callUI(); }
+    if(s==='connected'&&CALL.st==='re'){ CALL.st='on'; toast('📞 다시 이어졌다'); callUI(); }
+    else if((s==='disconnected'||s==='failed')&&(CALL.st==='on'||CALL.st==='re')) callRe();
+    else if(s==='connected'&&CALL.st!=='on'){ CALL.st='on'; CALL.t0=performance.now(); clearTimeout(CALL.ringT); callDuck(true); toast(`📞 ${CALL.nm}와 연결됐다`,'이어폰을 끼면 게임 소리가 안 넘어간다'); callUI(); }
     else if(s==='failed') callEnd('📞 연결이 안 됐다','와이파이에서 다시 해 보기 · 휴대폰 데이터끼리는 막힐 때가 있다');
     else if(s==='disconnected'){ setTimeout(()=>{ if(CALL.pc===pc&&pc.connectionState==='disconnected') callEnd('📞 연결이 끊겼다'); },6000); } };
   return pc; }
+// 다시 잇기: 돌아다니다 와이파이↔데이터가 바뀌면 길이 끊긴다 → 건 쪽이 ICE를 새로 열고, 받은 쪽은 rst로 부탁 · 25초 안에 못 이으면 끝
+async function callRestart(){ const pc=CALL.pc; if(!pc||!CALL.out||pc.signalingState==='closed') return; try{ if(pc.restartIce) pc.restartIce(); const of=await pc.createOffer({iceRestart:true}); await pc.setLocalDescription(of); callSig('sdp',{d:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}}); }catch(e){ console.warn('restart',e); } }
+function callRe(){ if(CALL.st!=='on'&&CALL.st!=='re') return; if(CALL.st!=='re'){ CALL.st='re'; CALL.reT0=performance.now(); toast('📞 연결이 흔들린다 · 다시 잇는 중','돌아다니다 와이파이↔데이터가 바뀌면 그럴 수 있다'); callUI(); }
+  if(CALL.out) callRestart(); else callSig('rst');
+  clearTimeout(CALL.reT); CALL.reT=setTimeout(function chk(){ if(CALL.st!=='re') return; if(CALL.pc&&CALL.pc.connectionState==='connected'){ CALL.st='on'; toast('📞 다시 이어졌다'); callUI(); return; } if(performance.now()-CALL.reT0>25000) return callEnd('📞 연결이 끊겼다','망이 바뀌었거나 신호가 약했다 · 📞 다시 걸기',true,'net','연결 끊김');
+    if(CALL.out) callRestart(); else callSig('rst'); CALL.reT=setTimeout(chk,6000); },6000); }
+addEventListener('visibilitychange',()=>{ if(!document.hidden&&(CALL.st==='on'||CALL.st==='re')&&CALL.pc&&CALL.pc.connectionState!=='connected') callRe(); });
 async function callFlush(){ const pc=CALL.pc; if(!pc||!pc.remoteDescription) return; const q=CALL.q.splice(0); for(const c of q){ try{ await pc.addIceCandidate(c); }catch(e){} } }
 function callAu(){ let a=$('callAu'); if(!a){ a=document.createElement('audio'); a.id='callAu'; a.autoplay=true; a.setAttribute('playsinline',''); document.body.appendChild(a); } return a; }
 function callDuck(on){ try{ if(SND.master&&SND.on) SND.master.gain.value=on?.22:.7; }catch(e){} }
 function callRing(on){ clearInterval(CALL.ring); CALL.ring=null; if(!on) return; const beep=()=>{ try{ const c=SND.ctx; if(c){ const t=c.currentTime; for(const [f,d] of [[660,0],[880,.18]]){ const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0,t+d); g.gain.linearRampToValueAtTime(.12,t+d+.02); g.gain.exponentialRampToValueAtTime(.0001,t+d+.16); o.connect(g); g.connect(c.destination); o.start(t+d); o.stop(t+d+.2); } } if(navigator.vibrate) navigator.vibrate([120,80,120]); }catch(e){} }; beep(); CALL.ring=setInterval(beep,1800); }
-function callEnd(msg,sub='',tell=true){ if(!CALL.st) return; if(tell) callSig('bye'); clearTimeout(CALL.ringT); callRing(false);
+function callEnd(msg,sub='',tell=true,r='hang',why=''){ if(!CALL.st) return; if(tell) callSig('bye',{r}); clearTimeout(CALL.ringT); clearTimeout(CALL.reT); callRing(false);
+  const talked=CALL.t0&&(CALL.st==='on'||CALL.st==='re'), dur=talked?mmss((performance.now()-CALL.t0)/1000):'', w=why||String(msg||'').replace(/^📞\s*/,'');
+  if(CALL.peer&&CALL.nm){ const d=new Date(); CALL.log.unshift({tm:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),nm:CALL.nm,dur,why:w}); CALL.log.length=Math.min(CALL.log.length,3);
+    if(talked||CALL.st==='out'){ CALL.last={peer:CALL.peer,nm:CALL.nm,why:w,dur,until:performance.now()+7000}; callBeepEnd(); } }
   try{ if(CALL.pc) CALL.pc.close(); }catch(e){} try{ if(CALL.ms) CALL.ms.getTracks().forEach(t=>t.stop()); }catch(e){} const a=$('callAu'); if(a){ try{ a.pause(); }catch(e){} a.srcObject=null; }
   const B=$('callInB'); if(B) B.remove(); Object.assign(CALL,{st:'',pc:null,ms:null,q:[],peer:'',id:'',needTap:0}); callDuck(false); callUI(); if(msg) toast(msg,sub); }
+function callBeepEnd(){ try{ const c=SND.ctx; if(c){ const t=c.currentTime; for(const d of [0,.32]){ const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=480; g.gain.setValueAtTime(0,t+d); g.gain.linearRampToValueAtTime(.1,t+d+.02); g.gain.setValueAtTime(.1,t+d+.2); g.gain.linearRampToValueAtTime(0,t+d+.24); o.connect(g); g.connect(c.destination); o.start(t+d); o.stop(t+d+.26); } } if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){} }
 async function callAccept(){ callRing(false); CALL.st='mic'; const ms=await callMic(); if(!ms){ callSig('rej'); Object.assign(CALL,{st:'',peer:'',id:''}); callUI(); return; }
   if(CALL.st!=='mic'){ ms.getTracks().forEach(t=>t.stop()); return; } CALL.ms=ms; CALL.st='conn'; callSig('acc'); callUI();
   clearTimeout(CALL.ringT); CALL.ringT=setTimeout(()=>{ if(CALL.st==='conn') callEnd('📞 연결이 안 됐다','와이파이에서 다시 해 보기'); },25000); }
 async function callOnSig(o){ const k=o.k; if(DBG.clog) console.log('call sig '+k+' st='+CALL.st+' id='+o.id+'/'+CALL.id+' f='+o.f+'/'+CALL.peer);
   if(k==='ring'){ if(CALL.st){ if(MP.room) MP.room.sig(o.f,{k:'busy',id:o.id}); return; }
     const p=mpPeers().find(q=>q.peer===o.f); const nm=p?mpName(p):(typeof o.nm==='string'?o.nm.replace(/[<>&"']/g,'').slice(0,10):'')||'누군가';
-    Object.assign(CALL,{st:'in',peer:o.f,nm,id:String(o.id||'').slice(0,8),q:[],mute:false,gone:0}); callRing(true); callUI();
+    Object.assign(CALL,{st:'in',out:0,peer:o.f,nm,id:String(o.id||'').slice(0,8),q:[],mute:false,gone:0,t0:0,last:null}); callRing(true); callUI();
     askBox('callInB',`<b>📞 ${nm}의 전화</b><small>받으면 마이크 허락 창이 뜬다 · 이어폰 권장</small>`,[['받기','big call',()=>callAccept()],['거절','',()=>{ callSig('rej'); callRing(false); Object.assign(CALL,{st:'',peer:'',id:''}); callUI(); },()=>{ if(CALL.st==='in'){ callRing(false); const n=CALL.nm; Object.assign(CALL,{st:'',peer:'',id:''}); callUI(); toast(`📞 ${n}의 전화를 놓쳤다`); } }]],30000); return; }
   if(o.f!==CALL.peer||String(o.id||'')!==CALL.id) return;
-  if(k==='bye'){ const B=$('callInB'); if(B) B.remove(); callEnd(CALL.st==='in'?`📞 ${CALL.nm}가 전화를 거뒀다`:`📞 ${CALL.nm}가 전화를 끊었다`,'',false); return; }
+  if(k==='bye'){ const B=$('callInB'); if(B) B.remove(); const n=CALL.nm;
+    if(CALL.st==='in') callEnd(`📞 ${n}가 전화를 거뒀다`,'',false,'',`${n}가 거둠`);
+    else if(o.r==='leave') callEnd(`📞 ${n}가 게임을 닫았다`,'창을 닫았거나 다른 곳으로 넘어감',false,'',`${n}가 게임을 닫음`);
+    else if(o.r==='net') callEnd(`📞 ${n} 쪽 연결이 끊겼다`,'망이 바뀌었거나 신호가 약했다 · 📞 다시 걸기',false,'',`연결 끊김`);
+    else callEnd(`📞 ${n}가 전화를 끊었다`,'',false,'',`${n}가 끊음`); return; }
+  if(k==='rst'&&CALL.out&&(CALL.st==='on'||CALL.st==='re')){ callRe(); return; }
   if(k==='rej'&&CALL.st==='out') return callEnd(`📞 ${CALL.nm}가 지금은 못 받는다`,'',false);
   if(k==='busy'&&CALL.st==='out') return callEnd(`📞 ${CALL.nm}는 통화 중이다`,'',false);
   if(k==='acc'&&CALL.st==='out'){ CALL.st='conn'; callUI(); const pc=callPc(); try{ const of=await pc.createOffer(); await pc.setLocalDescription(of); callSig('sdp',{d:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}}); }catch(e){ callEnd('📞 연결이 안 됐다'); }
     clearTimeout(CALL.ringT); CALL.ringT=setTimeout(()=>{ if(CALL.st==='conn') callEnd('📞 연결이 안 됐다','와이파이에서 다시 해 보기 · 휴대폰 데이터끼리는 막힐 때가 있다'); },25000); return; }
-  if(k==='sdp'&&o.d&&typeof o.d.sdp==='string'){ try{ if(o.d.type==='offer'&&CALL.st==='conn'){ const pc=CALL.pc||callPc(); await pc.setRemoteDescription(o.d); await callFlush(); const an=await pc.createAnswer(); await pc.setLocalDescription(an); callSig('sdp',{d:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}}); }
+  if(k==='sdp'&&o.d&&typeof o.d.sdp==='string'){ try{ if(o.d.type==='offer'&&(CALL.st==='conn'||((CALL.st==='on'||CALL.st==='re')&&CALL.pc))){ const pc=CALL.pc||callPc(); await pc.setRemoteDescription(o.d); await callFlush(); const an=await pc.createAnswer(); await pc.setLocalDescription(an); callSig('sdp',{d:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}}); }
       else if(o.d.type==='answer'&&CALL.pc){ await CALL.pc.setRemoteDescription(o.d); await callFlush(); } }catch(e){ console.warn('sdp',e); callEnd('📞 연결이 안 됐다'); } return; }
   if(k==='ice'&&o.c){ if(CALL.pc&&CALL.pc.remoteDescription){ try{ await CALL.pc.addIceCandidate(o.c); }catch(e){} } else if(CALL.q.length<60) CALL.q.push(o.c); } }
-function callUI(){ const b=$('callBar'); if(!b) return; const st=CALL.st; b.style.display=st&&st!=='in'&&st!=='mic'?'flex':'none'; if(!st||st==='in'||st==='mic') return;
+function callUI(){ const b=$('callBar'); if(!b) return; const st=CALL.st, L=CALL.last, ended=!st&&L&&performance.now()<L.until;
+  b.style.display=ended||(st&&st!=='in'&&st!=='mic')?'flex':'none'; b.classList.toggle('ended',!!ended); b.classList.toggle('re',st==='re');
+  if(ended){ $('cbN').textContent=L.nm; $('cbT').textContent=L.why+(L.dur?' · '+L.dur:''); return; } if(!st||st==='in'||st==='mic') return;
   $('cbN').textContent=CALL.nm; const p=mpPeers().find(q=>q.peer===CALL.peer);
-  $('cbT').textContent=CALL.needTap?'소리 켜기 👆':st==='out'?'거는 중…':st==='conn'?'잇는 중…':mmss((performance.now()-CALL.t0)/1000);
+  $('cbT').textContent=CALL.needTap?'소리 켜기 👆':st==='out'?'거는 중…':st==='conn'?'잇는 중…':st==='re'?'다시 잇는 중…':CALL.gone>3?'신호 기다리는 중…':mmss((performance.now()-CALL.t0)/1000);
   $('cbMute').textContent=CALL.mute?'🔇':'🎤'; $('cbMute').classList.toggle('off',CALL.mute); const pt=p&&isParty(p); $('cbPty').textContent=pt?'🤝✓':PTY.inv&&PTY.inv.to===CALL.peer?'🤝…':'🤝'; $('cbPty').classList.toggle('on',!!pt); b.classList.toggle('live',st==='on'); }
-setInterval(()=>{ if(!CALL.st) return; callUI(); if(CALL.st==='in'||CALL.st==='mic') return; const here=mpPeers().some(q=>q.peer===CALL.peer); CALL.gone=here?0:CALL.gone+1; if(CALL.gone>=9) callEnd('📞 상대가 나가서 끊겼다','',false); },1000);
-addEventListener('pagehide',()=>{ if(CALL.st) callSig('bye'); });
+setInterval(()=>{ if(!CALL.st){ if(CALL.last){ callUI(); if(performance.now()>CALL.last.until) CALL.last=null; } return; } callUI(); if(CALL.st==='in'||CALL.st==='mic') return; const here=mpPeers().some(q=>q.peer===CALL.peer); CALL.gone=here?0:CALL.gone+1;
+  const lim=CALL.st==='on'||CALL.st==='re'?30:9; if(CALL.gone>=lim) callEnd(`📞 ${CALL.nm} 연결이 끊겼다`,'상대 쪽 신호가 끊겼다 · 📞 다시 걸기',true,'net','상대 신호 끊김'); },1000);
+addEventListener('pagehide',()=>{ if(CALL.st) callSig('bye',{r:'leave'}); });
 function callInit(){ if(!MP.room||!MP.room.onSig||CALL.on) return; CALL.on=1; MP.room.onSig(o=>{ callOnSig(o).catch(e=>console.warn('call',e)); }); }
 setInterval(callInit,1000);
-{ const b=document.createElement('div'); b.id='callBar'; b.innerHTML='<div class="cn">📞 <b id="cbN"></b></div><div id="cbT"></div><div class="cbb"><span id="cbMute">🎤</span><span id="cbPty">🤝</span><span id="cbEnd">✕</span></div>'; document.body.appendChild(b);
+{ const b=document.createElement('div'); b.id='callBar'; b.innerHTML='<div class="cn">📞 <b id="cbN"></b></div><div id="cbT"></div><div class="cbb"><span id="cbMute">🎤</span><span id="cbPty">🤝</span><span id="cbEnd">✕</span></div><div class="cbe"><span id="cbRe">📞 다시</span><span id="cbX">닫기</span></div>'; document.body.appendChild(b);
   const on=(id,fn)=>$(id).addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); fn(); });
-  on('cbEnd',()=>callEnd(CALL.st==='on'?'📞 전화를 끊었다':'📞 전화를 거뒀다'));
+  on('cbEnd',()=>callEnd(CALL.st==='on'||CALL.st==='re'?'📞 전화를 끊었다':'📞 전화를 거뒀다','',true,'hang','내가 끊음'));
+  on('cbRe',()=>{ const L=CALL.last; CALL.last=null; callUI(); if(L) callStart(L.peer); });
+  on('cbX',()=>{ CALL.last=null; callUI(); });
   on('cbMute',()=>{ CALL.mute=!CALL.mute; try{ CALL.ms&&CALL.ms.getAudioTracks().forEach(t=>t.enabled=!CALL.mute); }catch(e){} toast(CALL.mute?'🔇 내 마이크 끔':'🎤 내 마이크 켬'); callUI(); });
   on('cbPty',()=>{ const p=mpPeers().find(q=>q.peer===CALL.peer); if(p&&isParty(p)) return toast(`🤝 ${CALL.nm}와 한 파티`,'메뉴 → 접속한 사람에서 파티 나가기'); ptInvite(CALL.peer); callUI(); });
   on('cbT',()=>{ if(CALL.needTap){ CALL.needTap=0; const a=$('callAu'); if(a) a.play().catch(()=>{}); callUI(); } }); }
@@ -4122,6 +4145,7 @@ function pplHtml(){ const ps=mpPeers(); if(!MP.room&&!ps.length) return ''; let 
     const act=`<div class="pAct">${cc?`<span class="pb${oncall?' on':''}" data-a="call" data-p="${p.peer}">${oncall?'📞 통화 중':'📞'}</span>`:''}${pt?'<span class="pb on">🤝 파티</span>':`<span class="pb" data-a="pty" data-p="${p.peer}">${inv?'🤝 청하는 중…':'🤝 파티'}</span>`}</div>`;
     h+=`<div class="sk${pt?' pt':''}"><div class="si">${q.dn===1?'💤':(q.e|0)>0?'🔥':pt?'🤝':'👤'}</div><div style="flex:1"><div class="sn">${mpName(p)}<small>${q.l?'Lv '+q.l:''}</small></div><div class="sd">${w}${far}${q.dn===1?' · 쓰러짐':''}${(q.e|0)>0?' · 불씨 '+(q.e|0):''}</div>${act}</div></div>`; }
   if(PTY.id) h+='<div class="pAct" style="justify-content:center;margin-top:4px"><span class="pb" data-a="leave">파티 나가기</span></div>';
+  if(CALL.log.length) h+='<div class="ph">최근 통화</div>'+CALL.log.map(c=>`<div class="none">${c.tm} · ${c.nm}${c.dur?' · '+c.dur:''} · ${c.why}</div>`).join('');
   if(!cc&&ps.length) h+=`<div class="none" style="font-size:11px">${MP.room&&MP.room.ext?'이 브라우저는 통화가 안 된다':'📞 전화는 GitHub 판에서만 된다'}</div>`;
   return h; }
 function pplAct(e){ const a=e.target.closest('[data-a]'); if(!a) return; e.preventDefault(); e.stopPropagation(); const k=a.dataset.a, peer=a.dataset.p;
@@ -4211,7 +4235,7 @@ function tick(now){
 }
 requestAnimationFrame(tick);
 if(BOT){ $('title').classList.remove('show'); sndInit(); SV.region=location.search.includes('seoul')?'seoulst':location.search.includes('myeong')?'myeong':'namsan'; SV.char=(location.search.match(/char=(\w+)/)||[])[1]||'fire'; startRun(location.search.includes('mfield')?'myeong':location.search.includes('sfield')?'suwon':null); }
-window.__dbg={DBG,PTY,CALL,callStart:p=>callStart(p),ptInvite:p=>ptInvite(p),ghostTap:(x,y)=>ghostTap(x,y),pplHtml:()=>pplHtml(),lootHud:()=>lootHud(),stackTop:()=>stackTop(),MPF,MP,evoMoment:(k,two)=>evoMoment(k,two),zoneKilled:(i,m)=>zoneKilled(zoneById(i),m,"민수"),blocked,BG,mkSpot:(x,z,b)=>mkSpot(x,z,b),get SPOTS(){return SPOTS;},makeGear,lootConfirm,spawn:(t,d)=>spawnAround(t,d),hit:(e,n)=>damage(e,n),get worldG(){return worldG;},FOGA:()=>FOG,terr,SITES,get S(){return S;},get SV(){return SV;},get MY(){return MY;},get R3(){return {renderer,scene,camera,amb,moon};},fieldReset:()=>fieldReset(),roundEnd:f=>roundEnd(f),fieldInherit:fk=>fieldInherit(fk),die:()=>{S.hp=0;gameOver();},hitBoss:n=>damageBoss(n,"dbg"),enemies,boss,player,setTs:v=>DBG.ts=v,lv:()=>{S.pendingLv++;},give:(k,l=1)=>{S.W[k]=l; if(k==='shadow') shadowP.root.visible=true; renderSlots();},startRun,enterHub};
+window.__dbg={DBG,PTY,CALL,callRe:()=>callRe(),callStart:p=>callStart(p),ptInvite:p=>ptInvite(p),ghostTap:(x,y)=>ghostTap(x,y),pplHtml:()=>pplHtml(),lootHud:()=>lootHud(),stackTop:()=>stackTop(),MPF,MP,evoMoment:(k,two)=>evoMoment(k,two),zoneKilled:(i,m)=>zoneKilled(zoneById(i),m,"민수"),blocked,BG,mkSpot:(x,z,b)=>mkSpot(x,z,b),get SPOTS(){return SPOTS;},makeGear,lootConfirm,spawn:(t,d)=>spawnAround(t,d),hit:(e,n)=>damage(e,n),get worldG(){return worldG;},FOGA:()=>FOG,terr,SITES,get S(){return S;},get SV(){return SV;},get MY(){return MY;},get R3(){return {renderer,scene,camera,amb,moon};},fieldReset:()=>fieldReset(),roundEnd:f=>roundEnd(f),fieldInherit:fk=>fieldInherit(fk),die:()=>{S.hp=0;gameOver();},hitBoss:n=>damageBoss(n,"dbg"),enemies,boss,player,setTs:v=>DBG.ts=v,lv:()=>{S.pendingLv++;},give:(k,l=1)=>{S.W[k]=l; if(k==='shadow') shadowP.root.visible=true; renderSlots();},startRun,enterHub};
 
 </script>
 </body>
