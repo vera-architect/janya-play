@@ -2130,10 +2130,11 @@ const EVOS={
 };
 const MAXW=6, MAXP=5;
 /* v2.25 짝 서브 스킬: 무기마다 짝이 되는 서브 스킬(EVOS.need)이 있다. 짝 서브 1단계마다 그 무기 위력 +8% · 간격 -5%.
-   짝 서브 5단계(만땅) + 무기 Lv5 → 각성 카드. 서브 하나가 여러 무기의 짝이 되기도 한다(두꺼운 옷 → 도끼·그림자·장승). */
+   1차 각성: 무기 Lv5 + 짝 서브 보유(예전 그대로) · 2차 각성: 1차 각성 + 짝 서브 5단계 → 위력 ×1.5 · 간격 -20%. 서브 하나가 여러 무기의 짝이 되기도 한다(두꺼운 옷 → 도끼·그림자·장승). */
 const PAIR_M=.08, PAIR_C=.05;
 const pairLv=k=>(S&&EVOS[k]&&S.P)?Math.min(5,S.P[EVOS[k].need]||0):0;
-const pm=k=>1+PAIR_M*pairLv(k), pcd=k=>1-PAIR_C*pairLv(k);
+const ev2=k=>!!(S&&S.evo2&&S.evo2[k]);
+const pm=k=>(1+PAIR_M*pairLv(k))*(ev2(k)?1.5:1), pcd=k=>(1-PAIR_C*pairLv(k))*(ev2(k)?.8:1);
 const pairsOf=pk=>Object.keys(EVOS).filter(k=>EVOS[k].need===pk);
 /* ============ v2.2 기술: 새 무기 8 · 갈래(Lv3) · 조합 7 ============ */
 // 갈래: 무기가 Lv3이 될 때 둘 중 하나를 고른다. 고른 갈래에 따라 움직임이 바뀐다.
@@ -2402,7 +2403,7 @@ const joris=[]; const enemies=[], gems=[], embersItems=[], orbs=[], foxShots=[],
 function newState(charKey,regionKey){
   const C=CHARS[charKey];
   const s={phase:'play',char:charKey,region:regionKey,bossKey:REGIONS[regionKey].boss,t:0,kills:0,lv:1,xp:0,need:need(1),hp:100,maxhp:100+10*upLv('hp'),nb:newbK(),
-    W:{[C.start]:1},P:{},evo:{},spawnAcc:0,eliteT:75,treasureT:40,eventsDone:{},treasures:0,firstTreasure:false,
+    W:{[C.start]:1},P:{},evo:{},evo2:{},spawnAcc:0,eliteT:75,treasureT:40,eventsDone:{},treasures:0,firstTreasure:false,
     bossSpawned:false,bossDead:false,endless:false,cd:{},face:{x:0,z:1},pendingLv:0,memI:Math.floor(Math.random()*MEMORIES.length),hurtT:0,
     reroll:upLv('reroll'),revive:upLv('revive'),heat:Math.min(SV.heat||0,upLv('heat')),seals:upLv('seal'),sealed:{},charm:upLv('charm'),runT:0,lastDir:{x:0,z:1},saltD:0,saltPath:[],spCd:6,dash:null,lg:0,hails:[],loopCd:0,marks:0,npc:null,ally:0,carry:SV.carry,br:{},fu:{},yuts:[],posts:[],segs:null,jangs:[],kites:[],tops:[],arrows:[],arrowQ:[],rockets:[],waves:[]};
   s.hp=s.maxhp;
@@ -2960,14 +2961,15 @@ function inPoly(x,z,p){ let c=false; for(let i=0,j=p.length-1;i<p.length;j=i++){
 function gainXp(v){ S.xp+=v*(S.char==='gosi'?1.3:1)*(S.fb?S.fb.xp:1)*TU('xp'); while(S.xp>=S.need){ S.xp-=S.need; S.lv++; S.need=need(S.lv); S.pendingLv++; } }
 function choices(){
   const out=[], W=S.W, P=S.P, E=S.evo, wc=Object.keys(W).length, pc=Object.keys(P).length;
-  for(const k in EVOS){ const ev=EVOS[k]; if(W[k]===5&&(P[ev.need]||0)>=5&&!E[k]) out.push({kind:'evo',id:k,w:100,ic:WEAPONS[k].ic,name:ev.name,tag:'각성',desc:ev.desc}); }
+  for(const k in EVOS){ const ev=EVOS[k]; if(W[k]===5&&P[ev.need]&&!E[k]) out.push({kind:'evo',id:k,w:100,ic:WEAPONS[k].ic,name:ev.name,tag:'각성',desc:ev.desc});
+    else if(E[k]&&(P[ev.need]||0)>=5&&!(S.evo2&&S.evo2[k])) out.push({kind:'evo2',id:k,w:110,ic:WEAPONS[k].ic,name:'진 '+ev.name,tag:'2차 각성',desc:`${PASSIVES[ev.need].name} 5단계로 깨어난다 · 위력 ×1.5 · 공격 간격 -20%`}); }
   for(const k in FUS){ const f=FUS[k]; if(f.char&&f.char!==S.char) continue; if(W[f.a]>=5&&W[f.b]>=5&&!S.fu[k]) out.push({kind:'fu',id:k,w:120,ic:f.ic,name:f.name,tag:`조합 · ${WEAPONS[f.a].ic} + ${WEAPONS[f.b].ic}`,desc:f.desc}); }
   for(const k in WEAPONS){ const l=W[k]||0; if(E[k]||l>=5||(!l&&wc>=MAXW)||S.sealed[k]) continue; const pv=upLv('preview')&&l===2&&BR[k]?`<small class="pv">Lv3 갈래 · ㄱ ${BR[k].a[0]} / ㄴ ${BR[k].b[0]}</small>`:''; out.push({kind:'w',id:k,w:l?1.3:(WEAPONS[k].kind==='독창'?1.25:1),ic:WEAPONS[k].ic,name:WEAPONS[k].name,tag:l?`Lv ${l} → ${l+1}`:`새 무기 · ${WEAPONS[k].kind}`,desc:WEAPONS[k].desc(l+1)+pv}); }
   for(const k in PASSIVES){ const l=P[k]||0; if(l>=5||(!l&&pc>=MAXP)||S.sealed['p_'+k]) continue; out.push({kind:'p',id:k,w:l?1:.9,ic:PASSIVES[k].ic,name:PASSIVES[k].name,tag:l?`Lv ${l} → ${l+1}`:'새 힘',desc:PASSIVES[k].desc}); }
   for(const k in WEAPONS){ const l=W[k]||0; if(l<5) continue; const st=(S.star&&S.star[k])||0; out.push({kind:'star',id:k,w:out.length>4?.35:1,ic:WEAPONS[k].ic,name:WEAPONS[k].name+' ★'+(st+1),tag:'끝없는 성장',desc:'모든 공격 +4% (★마다)'}); }
   for(const c of out){ // v2.25 짝 서브 안내
-    if(c.kind==='w'&&EVOS[c.id]){ const pk=EVOS[c.id].need, pl=P[pk]||0; c.pair=`짝 ${PASSIVES[pk].name} ${pl}/5`; c.desc+=`<small class="pv">짝 서브 · ${PASSIVES[pk].ic} ${PASSIVES[pk].name} ${pl}/5${pl>=5?' · 무기 Lv5면 각성':''}</small>`; }
-    if(c.kind==='p'){ const ws=pairsOf(c.id); if(ws.length){ const own=ws.filter(k=>W[k]); if(own.length) c.pair=`짝 ${own.map(k=>WEAPONS[k].name).join('·')} 강화`; c.desc+=`<small class="pv">짝 무기 ${(own.length?own:ws).map(k=>WEAPONS[k].ic+WEAPONS[k].name).join('·')}${own.length?'':' (아직 없음)'} — 단계마다 위력 +8%·간격 -5% · 5단계면 각성</small>`; } } }
+    if(c.kind==='w'&&EVOS[c.id]){ const pk=EVOS[c.id].need, pl=P[pk]||0; c.pair=`짝 ${PASSIVES[pk].name} ${pl}/5`; c.desc+=`<small class="pv">짝 서브 · ${PASSIVES[pk].ic} ${PASSIVES[pk].name} ${pl}/5${E[c.id]?(pl>=5?' · 2차 각성 준비':' · 5단계면 2차 각성'):''}</small>`; }
+    if(c.kind==='p'){ const ws=pairsOf(c.id); if(ws.length){ const own=ws.filter(k=>W[k]); if(own.length) c.pair=`짝 ${own.map(k=>WEAPONS[k].name).join('·')} 강화`; c.desc+=`<small class="pv">짝 무기 ${(own.length?own:ws).map(k=>WEAPONS[k].ic+WEAPONS[k].name).join('·')}${own.length?'':' (아직 없음)'} — 단계마다 위력 +8%·간격 -5% · 5단계면 2차 각성</small>`; } } }
   const pick=[]; const pool=out.slice();
   const NC=upLv('card4')?4:3; while(pick.length<NC&&pool.length){ const tot=pool.reduce((a,c)=>a+c.w,0); let r=Math.random()*tot; let i=0; for(;i<pool.length;i++){ r-=pool[i].w; if(r<=0) break; } pick.push(pool.splice(Math.min(i,pool.length-1),1)[0]); }
   if(pick.length===3&&pick.every(c=>c.kind==='p')){ const w=out.filter(c=>c.kind!=='p'); if(w.length) pick[2]=w[Math.floor(Math.random()*w.length)]; }
@@ -2978,6 +2980,7 @@ function apply(c){
   if(c.kind==='w'){ if(!S.W[c.id]){ S.wGot=S.wGot||{}; S.wGot[c.id]=S.t||0; } S.W[c.id]=(S.W[c.id]||0)+1; SV.found['w_'+c.id]=1; if(c.id==='shadow') shadowP.root.visible=true; if(S.W[c.id]===3&&BR[c.id]&&!S.br[c.id]) S.pendingBr=c.id; }
   else if(c.kind==='fu'){ S.fu[c.id]=true; SV.found['f_'+c.id]=1; toast(c.name,'두 기술이 합쳐졌다'); DBG.shake=.5; }
   else if(c.kind==='p'){ S.P[c.id]=(S.P[c.id]||0)+1; if(c.id==='hp'){ S.maxhp+=20; S.hp+=20; } }
+  else if(c.kind==='evo2'){ S.evo2=S.evo2||{}; S.evo2[c.id]=true; SV.found['e2_'+c.id]=1; toast(c.name,'2차 각성했다'); evoMoment(c.id); }
   else if(c.kind==='evo'){ S.evo[c.id]=true; SV.found['e_'+c.id]=1; toast(c.name,'각성했다'); if(c.id==='shadow') shadowP.root.scale.setScalar(1.35); evoMoment(c.id); }
   else if(c.kind==='star'){ S.star=S.star||{}; S.star[c.id]=(S.star[c.id]||0)+1; S.starN=(S.starN||0)+1; }
   else if(c.kind==='heal') S.hp=Math.min(S.maxhp,S.hp+40);
@@ -2986,14 +2989,14 @@ function apply(c){
 }
 // v2.7: 안 멈추는 레벨업 — 화면 아래 카드 (v2.7.5부터 직접 고름)
 const LVB_T=5;
-function recPick(cs){ return cs.find(c=>c.kind==='fu')||cs.find(c=>c.kind==='evo')||cs.find(c=>c.kind==='w'&&S.W[c.id])||cs.find(c=>c.kind==='w')||cs.find(c=>c.kind==='star')||cs[0]; }
+function recPick(cs){ return cs.find(c=>c.kind==='fu')||cs.find(c=>c.kind==='evo')||cs.find(c=>c.kind==='evo2')||cs.find(c=>c.kind==='w'&&S.W[c.id])||cs.find(c=>c.kind==='w')||cs.find(c=>c.kind==='star')||cs[0]; }
 function lvbShow(title,cs,onPick,rr){
   S.lvb={cs,rec:recPick(cs),t:LVB_T,onPick}; sfx.lvl();
   const T=$('lvbT'); T.innerHTML=`<span>${title}</span>`;
   if(rr){ const r=document.createElement('span'); r.className='rr'; r.textContent=`다시 (${S.reroll})`; r.onpointerdown=e=>{ e.stopPropagation(); e.preventDefault(); if(S.reroll<=0) return; S.reroll--; S.lvb=null; openLevelUp(); }; T.appendChild(r); }
   if(lvKeep()){ const f=document.createElement('span'); f.className='rr'; f.textContent='접기 ✕'; f.onpointerdown=e=>{ e.stopPropagation(); e.preventDefault(); S.lvb=null; $('lvbar').classList.remove('show'); updLvBadge(); }; T.appendChild(f); }
   const box=$('lvbC'); box.innerHTML='';
-  cs.forEach(c=>{ const d=document.createElement('div'); d.className='lbc'+(c.kind==='evo'||c.kind==='fu'?' evo':'')+(c===S.lvb.rec?' rec':'');
+  cs.forEach(c=>{ const d=document.createElement('div'); d.className='lbc'+(c.kind==='evo'||c.kind==='evo2'||c.kind==='fu'?' evo':'')+(c===S.lvb.rec?' rec':'');
     d.innerHTML=`<div class="ic">${c.ic}</div><div class="tx"><b>${c.name}</b><div class="tg">${String(c.tag).replace(/<[^>]+>/g,' ')}</div>${c.pair?`<div class="tg pr">${c.pair}</div>`:''}</div>`; d.title=String(c.desc).replace(/<[^>]+>/g,' ');
     d.onpointerdown=e=>{ e.stopPropagation(); e.preventDefault(); lvbPick(c); }; box.appendChild(d); });
   $('lvbar').classList.add('show');
@@ -3023,7 +3026,7 @@ function closeCamp(){ $('lvup').classList.remove('show'); $('cards').innerHTML='
 function renderCamp(){ const sp=nextSpec(); if(!sp){ toast('🔥 성장을 모두 골랐다','불빛 밖으로 나가면 다시 싸운다'); closeCamp(); return; }
   $('lvt').innerHTML=`🔥 모닥불 곁 · 밀린 성장 <b style="color:#f4b740">${pendN()}</b>`; $('lvmem').innerHTML=sp.title;
   const box=$('cards'); box.innerHTML=''; const rec=recPick(sp.cs);
-  for(const c of sp.cs){ const d=document.createElement('div'); d.className='card'+(c.kind==='evo'||c.kind==='fu'?' evo':''); d.innerHTML=`<div class="ic">${c.ic}</div><div><div class="tag">${c.tag}${c===rec?' · 추천':''}</div><b>${c.name}</b><span>${String(c.desc).replace(/<[^>]+>/g,' ')}</span></div>`;
+  for(const c of sp.cs){ const d=document.createElement('div'); d.className='card'+(c.kind==='evo'||c.kind==='evo2'||c.kind==='fu'?' evo':''); d.innerHTML=`<div class="ic">${c.ic}</div><div><div class="tag">${c.tag}${c===rec?' · 추천':''}</div><b>${c.name}</b><span>${String(c.desc).replace(/<[^>]+>/g,' ')}</span></div>`;
     d.onclick=()=>{ if(S.phase!=='lvup'||!$('lvup').classList.contains('show')) return; sp.pick(c); sfx.lvl(); const P=player.root.position; fx(P.x,P.z,1.6,[.3,1,.85],.35); renderSlots(); renderCamp(); }; box.appendChild(d); }
   const rr=$('bReroll'); rr.style.display=sp.rr&&S.reroll>0?'block':'none'; rr.textContent=`다시 고르기 (${S.reroll})`; rr.onclick=()=>{ if(S.reroll<=0) return; S.reroll--; renderCamp(); };
   const lt=$('bCampLater'); lt.style.display='block'; }
@@ -3103,13 +3106,18 @@ function skillsHtml(){ const W=S.W||{}, P=S.P||{}, E=S.evo||{}; const bar=n=>`<s
   for(const k of wk){ const D=WEAPONS[k]; if(!D) continue; const l=W[k], b=S.br&&S.br[k]&&BR[k]?BR[k][S.br[k]]:null, ev=EVOS[k], aw=!!E[k];
     let d=aw?ev.desc:D.desc(1); if(!aw&&l>1) d+=` · 지금: ${D.desc(l)}`; if(b) d+=`<br>갈래 「${b[0]}」 ${b[1]}`;
     let sp=''; if(ev){ const pk=ev.need, pl=Math.min(5,P[pk]||0); sp=`짝 서브 ${PASSIVES[pk].ic} ${PASSIVES[pk].name} ${bar(pl)}${pl}/5 → 위력 <b>+${Math.round(pl*PAIR_M*100)}%</b> · 간격 <b>-${Math.round(pl*PAIR_C*100)}%</b>`;
-      sp+=aw?'<br>✦ 각성함':`<br>각성: 무기 Lv${l}/5 · ${PASSIVES[pk].name} ${pl}/5${l>=5&&pl>=5?' — 다음 레벨업에 각성 카드':''}`; }
-    h+=`<div class="sk${aw?' aw':''}"><div class="si">${D.ic}</div><div><div class="sn">${aw?ev.name:D.name}<small>${aw?'각성':'Lv '+l}</small></div><div class="sd">${d}</div>${sp?`<div class="sp">${sp}</div>`:''}</div></div>`; }
+      const a2=ev2(k); sp+=a2?'<br>✦✦ 2차 각성함 · 위력 ×1.5 · 간격 -20%':aw?`<br>✦ 각성함 · 2차 각성: ${PASSIVES[pk].name} ${pl}/5${pl>=5?' — 다음 레벨업에 카드':''}`:`<br>각성: 무기 Lv${l}/5 + ${PASSIVES[pk].name} 보유${l>=5&&pl?' — 다음 레벨업에 카드':''} · 2차 각성: ${PASSIVES[pk].name} 5단계`; }
+    h+=`<div class="sk${aw?' aw':''}"><div class="si">${D.ic}</div><div><div class="sn">${ev2(k)?'진 '+ev.name:aw?ev.name:D.name}<small>${ev2(k)?'2차 각성':aw?'각성':'Lv '+l}</small></div><div class="sd">${d}</div>${sp?`<div class="sp">${sp}</div>`:''}</div></div>`; }
   const fk=Object.keys(S.fu||{}); for(const k of fk){ const f=FUS[k]; if(f) h+=`<div class="sk aw"><div class="si">${f.ic}</div><div><div class="sn">${f.name}<small>조합</small></div><div class="sd">${f.desc}</div></div></div>`; }
   h+='<div class="ph">서브 스킬</div>'; const pk=Object.keys(P); if(!pk.length) h+='<div class="none">아직 없음 · 서브 스킬을 올리면 짝 무기가 세지고, 5단계면 각성</div>';
   for(const k of pk){ const D=PASSIVES[k]; if(!D) continue; const l=P[k], ws=pairsOf(k), own=ws.filter(w=>W[w]);
     const sp=ws.length?`짝 무기 ${ws.map(w=>(W[w]?'<b>':'')+WEAPONS[w].name+(W[w]?'</b>':'')).join(' · ')}${own.length?` → 위력 +${Math.round(l*PAIR_M*100)}% · 간격 -${Math.round(l*PAIR_C*100)}%`:' (가진 짝 무기 없음)'}`:'';
     h+=`<div class="sk"><div class="si">${D.ic}</div><div><div class="sn">${D.name}<small>Lv ${l}/5</small> ${bar(l)}</div><div class="sd">${D.desc} (단계마다)</div>${sp?`<div class="sp">${sp}</div>`:''}</div></div>`; }
+  const ps=mpPeers(); if(MP.room||ps.length){ h+=`<div class="ph">접속한 사람 ${ps.length}</div>`; if(!ps.length) h+='<div class="none">지금은 나 혼자</div>';
+    const P0=player.root.position, ar=mpArea();
+    for(const p of ps){ const q=p.presence||{}, a=String(q.a||'hub'); let w=a==='hub'?'모닥불 거점':a.startsWith('f:')?(FIELDS[a.slice(2)]?FIELDS[a.slice(2)].name:'지역 필드'):a==='w'?'서울 지도':'걷는 중';
+      let far=''; if(a===ar&&typeof q.x==='number'){ const dx=q.x-P0.x, dz=q.z-P0.z, d=Math.hypot(dx,dz); const dirs=['→ 동','↘ 남동','↓ 남','↙ 남서','← 서','↖ 북서','↑ 북','↗ 북동']; const i=((Math.round(Math.atan2(dz,dx)/(Math.PI/4))%8)+8)%8; far=` · ${dirs[i].split(' ')[0]} ${Math.round(d*MPU())}m`; }
+      h+=`<div class="sk"><div class="si">${q.dn===1?'💤':(q.e|0)>0?'🔥':'👤'}</div><div><div class="sn">${mpName(p)}<small>${q.l?'Lv '+q.l:''}</small></div><div class="sd">${w}${far}${q.dn===1?' · 쓰러짐':''}${(q.e|0)>0?' · 불씨 '+(q.e|0):''}</div></div></div>`; } }
   return h; }
 function togglePause(){ if(!S) return; if(S.phase==='play'){ S.phase='pause'; $('pSkills').innerHTML=skillsHtml(); $('pstat').innerHTML=statHtml()+((S.loot&&S.loot.length)?`<br><small>🎒 들고 있는 장비: ${S.loot.map(it=>gTag(it)).join(' ')}<br>모닥불에 닿아야 내 것 · 쓰러지면 흘린다</small>`:'')+(S.starN?`<br><small>★ 끝없는 성장 ${S.starN}개 · 공격 +${S.starN*4}%</small>`:'');
     if(FIELD){ const ch=S.charm>0, n=shardsEarned(ch?'all':false), ld=nearFire(player.root.position).d; $('pRet').innerHTML=ch?`귀환 부적으로 돌아가면 조각 <b>${n}</b>개를 전부 챙긴다`:`가까운 모닥불까지 약 ${Math.round(ld*MPU())}m · 걸어서 닿으면 조각 전부<br>지금 돌아가면 조각 <b>${n}</b>개 (흘림)`; $('bQuit').textContent=ch?'🔥 귀환 부적 쓰기':'🔥 지금 돌아가기'; }
@@ -3324,7 +3332,9 @@ function mmDraw(t){ const on=!!(FIELD&&S&&S.field&&S.phase!=='hub'&&S.phase!=='o
   for(const f of (MY.fires||[])) dot(f.x,f.z,6,'#ffa640');
   for(const z of (MY.zones||[])){ const done=MPF.bd.includes(z.id); dot(z.x,z.z,z.mid?8:10,done?'rgba(150,150,160,.7)':z.mid?'#ff4a5a':'#ffd34a',true); }
   for(const o of SPOTS) if(!o.boss) dot(o.x,o.z,3.5,'#ffe27a');
-  for(const p of mpFieldPeers()){ const q=p.presence; if(typeof q.x==='number') dot(q.x,q.z,5,'#7fe3ff'); }
+  for(const p of mpPeers()){ const q=p.presence; if(q.a!=='f:'+S.field||typeof q.x!=='number') continue; const [px,pz,out]=pin(q.x,q.z), hold=(q.e|0)>0, r=out?5:7;
+    g.beginPath(); g.arc(px,pz,r,0,6.283); g.fillStyle=q.dn===1?'#8a8a96':hold?'#ffa040':'#5ad0ff'; g.fill(); g.lineWidth=2; g.strokeStyle='#08121c'; g.stroke();
+    if(!out){ g.fillStyle='#08121c'; g.font='800 9px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(mpName(p).slice(0,1),px,pz+.5); } }
   if(boss.alive&&!(boss.dying>0)) dot(boss.x,boss.z,7+2*Math.sin(t*8),'#ff2a3a');
   g.beginPath(); g.arc(h,h,6,0,6.283); g.fillStyle='#fff'; g.fill(); g.lineWidth=2.5; g.strokeStyle='#222'; g.stroke();
   g.restore(); }
@@ -3638,7 +3648,7 @@ function renderTree(){
     const ba=cnt(f['b_'+k+'a']), bb=cnt(f['b_'+k+'b']), e=cnt(f['e_'+k]);
     h+=`<div class="tr-row${w?'':' lk'}"><div class="tr-w"><span class="tr-ic">${w?Wd.ic:'?'}</span><b>${w?Wd.name:'???'}</b><small>${w?Wd.kind:''}</small></div>
       <div class="tr-br"><span class="${ba?'on':''}">ㄱ ${ba?B.a[0]:'🔒'}</span><span class="${bb?'on':''}">ㄴ ${bb?B.b[0]:'🔒'}</span></div>
-      <div class="tr-ev${e?' on':''}">★ ${e?ev.name:(w?'🔒 각성 · '+PASSIVES[ev.need].ic+PASSIVES[ev.need].name+' 5단계':'🔒')}</div></div>`; }
+      <div class="tr-ev${e?' on':''}">★ ${e?ev.name:(w?'🔒 각성 · '+PASSIVES[ev.need].ic+' 함께 · 5단계면 2차':'🔒')}</div></div>`; }
   h+=`<div class="tr-sec">조합 · 두 기술을 끝까지 키우면</div>`;
   for(const k in FUS){ const F=FUS[k], on=cnt(f['f_'+k]), ka=f['w_'+F.a]||F.a==='axe', kb=f['w_'+F.b]||F.b==='axe';
     h+=`<div class="tr-fu${on?' on':''}"><span class="tr-ic">${on?F.ic:'?'}</span><div><b>${on?F.name:'???'}</b><br><small>${ka?WEAPONS[F.a].ic+' '+WEAPONS[F.a].name:'???'} + ${kb?WEAPONS[F.b].ic+' '+WEAPONS[F.b].name:'???'}${on?' · '+F.desc:''}</small></div></div>`; }
