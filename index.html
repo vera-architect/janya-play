@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<script>window.JANYA_EXT=1</script>
+<script>window.JANYA_EXT=1;
+/* 카톡 안 브라우저로 열면 바깥 브라우저(크롬·사파리)로 넘긴다 — 게임하면서 카톡도 하게. ?inapp 붙이면 넘기지 않음 */
+(function(){ try{ if(/KAKAOTALK/i.test(navigator.userAgent)&&location.search.indexOf('inapp')<0){
+  location.replace('kakaotalk://web/openExternal?url='+encodeURIComponent(location.href));
+  setTimeout(function(){ var d=document.createElement('div'); d.style.cssText='position:fixed;left:10px;right:10px;bottom:20px;z-index:99999;background:#1a2230;color:#e8f8ff;border:2px solid #f4b740;border-radius:14px;padding:14px;font:600 15px/1.5 sans-serif;text-align:center';
+    d.innerHTML='바깥 브라우저로 안 넘어가면<br>오른쪽 아래 <b>⋮</b> → <b>다른 브라우저로 열기</b><br><small style="opacity:.7">아이폰은 공유 버튼 → Safari</small>'; (document.body||document.documentElement).appendChild(d); },1800); } }catch(e){} })();
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>잔야(가제) — 1단계 맛보기 v2.23</title>
