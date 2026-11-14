@@ -163,7 +163,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 #chQ small{opacity:.7;font-size:13px}
 #chOpts{display:flex;flex-direction:column;gap:8px}
 .opt{text-align:left;padding:12px 14px;border-radius:12px;border:2.5px solid #140d14;background:#2e2b52;box-shadow:0 3px 0 #140d14;font-size:15px;cursor:pointer}
-.opt span{display:inline-block;width:22px;color:#f4b740;font-weight:800}
+.opt>span:first-child{display:inline-block;width:22px;color:#f4b740;font-weight:800}
 .opt:active{transform:translateY(2px)}
 #chTimer{height:3px;background:#f4b740;margin-top:12px;opacity:.6}
 #arNpc{color:#c8fff5}
@@ -276,6 +276,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 #pSkills .bar{display:inline-block;width:46px;height:6px;border-radius:3px;background:rgba(255,255,255,.15);vertical-align:1px;margin:0 4px;overflow:hidden}#pSkills .bar i{display:block;height:100%;background:#33dcc8}
 #pSkills .none{font-size:12px;color:#aaa;padding:4px}
 .lbc .tg.pr{color:#33dcc8}
+#bOn{position:absolute;top:-9px;left:-10px;background:#5ad0ff;color:#08202c;border:2px solid #140d14;border-radius:10px;font-size:11px;line-height:1;padding:3px 5px;font-weight:800;pointer-events:none}
 </style>
 </head>
 <body>
@@ -291,7 +292,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 <div id="boss" class="ts"><b id="bossn">구미호</b><div id="bossb"><div id="bossf"></div></div></div>
 <div id="slots" class="ts"></div>
 <div id="lvBadge"><span>⬆ 1</span><small>성장 고르기</small></div>
-<div id="btns"><div class="btn" id="bSnd">소리</div><div class="btn" id="bPause">☰ 메뉴</div></div>
+<div id="btns"><div class="btn" id="bSnd" style="padding-left:9px;padding-right:9px">🔊</div><div class="btn" id="bPause" style="position:relative">☰ 메뉴<span id="bOn" style="display:none"></span></div></div>
 <div id="joy"><div id="knob"></div></div>
 <div id="toast" class="ts"></div>
 <div id="memory" class="ts"></div>
@@ -333,7 +334,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 <div class="ov" id="hub">
   <div id="hubTop" class="ts"><div>🔥 <b>모닥불</b> · 남산 아래</div><div>기억 조각 <b id="hShards">0</b></div></div>
   <div id="kBox"><div class="nm">모닥불지기</div><div id="kSay"></div></div>
-  <div id="hubInfo" class="ts"><span id="hChar"></span> · <span id="hRegion"></span></div>
+  <div id="hubInfo" class="ts"><span id="hChar"></span> · <span id="hRegion"></span><span id="hOn" style="display:none;color:#7fe3ff"></span></div>
   <div id="hubBtns">
     <div class="btn" id="hUp">🔥 불 키우기</div><div class="btn" id="hMap">🗺 지도</div><div class="btn" id="hCharB">👤 깨어난자</div>
     <div class="btn" id="hTree">🌳 기술</div><div class="btn" id="hFlow">🌿 갈래</div><div class="btn" id="hDex">📖 도감</div><div class="btn" id="hTalk">💬 말</div><div class="btn" id="hGear">🎒 장비</div>
@@ -2052,7 +2053,7 @@ const sfx={
 };
 if(window.__seeded) for(const k in sfx) sfx[k]=()=>{}; // 같은 판 비교: 소리는 실제 시간에 따라 무작위를 써서 판이 갈라진다 → 끈다
 
-$('bSnd').onclick=()=>{ SND.on=!SND.on; if(SND.master) SND.master.gain.value=SND.on?.7:0; $('bSnd').style.opacity=SND.on?1:.45; };
+$('bSnd').onclick=()=>{ SND.on=!SND.on; if(SND.master) SND.master.gain.value=SND.on?.7:0; $('bSnd').style.opacity=SND.on?1:.45; $('bSnd').textContent=SND.on?'🔊':'🔇'; };
 // v2.1 진동 (안드로이드 브라우저. 아이폰 사파리는 지원하지 않아 화면 효과만)
 function buzz(ms){ if(SV.vib===false||BOT) return; try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 const vibUi=()=>{ $('bVib').textContent=SV.vib===false?'📳 진동 꺼짐':'📳 진동 켜짐'; $('bVib').style.opacity=SV.vib===false?.55:1; }; vibUi();
@@ -3735,7 +3736,7 @@ $('hUp').onclick=()=>{ renderUps(); openPanel('pUp'); keeperSay('"조각을 주�
 $('hMap').onclick=()=>{ setMapMode('seoul'); renderMap(); openPanel('pMap'); };
 $('hCharB').onclick=()=>{ renderChars(); openPanel('pChar'); };
 $('hFlow').onclick=()=>{ renderFlow(); openPanel('pFlow'); };
-$('hGo').onclick=()=>{ openPanel(null); const I=starInfo('myeong'); showChoice('어디로 갈까','모닥불 기지에서 갈 곳을 고른다.',{a:`명동 골목 — 지역 필드<br><small>실제 거리 · <span style="color:${I.c}">${'★'.repeat(I.st)} ${I.w}</span> · 보스 뒤 3분 줍기</small>`,b:`수원 인계동·나혜석거리 — 지역 필드 (새)<br><small>실제 거리 · 넓은 골목 · <span style="color:${I.c}">${'★'.repeat(I.st)} ${I.w}</span>${SV.cleared.suwon?' · 보낸 적 있음':''}</small>`,c:`서울 이어 걷는 지도 — ${REGIONS[SV.region].name}에서`},c=>{ if(c==='a') startRun('myeong'); else if(c==='b') startRun('suwon'); else startRun(); },''); };
+$('hGo').onclick=()=>{ openPanel(null); const I=starInfo('myeong'); showChoice('어디로 갈까','모닥불 기지에서 갈 곳을 고른다.',{a:`명동 골목 — 지역 필드<br><small>실제 거리 · <span style="color:${I.c}">${'★'.repeat(I.st)} ${I.w}</span> · 보스 뒤 3분 줍기${mpHere('f:myeong')}</small>`,b:`수원 인계동·나혜석거리 — 지역 필드 (새)<br><small>실제 거리 · 넓은 골목 · <span style="color:${I.c}">${'★'.repeat(I.st)} ${I.w}</span>${SV.cleared.suwon?' · 보낸 적 있음':''}${mpHere('f:suwon')}</small>`,c:`서울 이어 걷는 지도 — ${REGIONS[SV.region].name}에서${mpHere('w')?'<br><small>'+mpHere('w').slice(3)+'</small>':''}`},c=>{ if(c==='a') startRun('myeong'); else if(c==='b') startRun('suwon'); else startRun(); },''); };
 $('hTalk').onclick=()=>keeperSay(keeperLine());
 document.querySelectorAll('.pclose').forEach(b=>b.onclick=()=>openPanel(null));
 let upTab='stat';
@@ -3986,6 +3987,14 @@ async function mpInit(){ try{ const C=window.claude; let room=null;
     if(MP.ready){ for(const p of ch.joined) if(!p.isMe&&p.kind==='viewer') mpAnnounce(p,1); for(const p of ch.left) if(!p.isMe&&p.kind==='viewer') mpAnnounce(p,0); } },()=>{ MP.room=null; mpClear(); });
   setTimeout(()=>{ MP.ready=true; const n=MP.online; if(n) toast(`👥 지금 ${n}명이 접속해 있다`,'서로 모르는 곳에서 각자 자란다 · 보스 불씨는 먼저 줍는 사람 것'); },3000); }catch(e){ MP.room=null; console.warn("mpInit",e); } }
 setTimeout(mpInit,0);
+// v2.28 접속자 수: 전체(나 포함) · 곳마다 — 거점 줄·필드 위 👥 · 지역 고를 때 「👥 N명」
+function mpCount(){ const ps=(MP.room?MP.room.peers():[]).filter(p=>p.kind==='viewer'); const by={}; for(const p of ps){ const a=p.isMe&&p.sameTab?mpArea():String((p.presence&&p.presence.a)||'hub'); by[a]=(by[a]||0)+1; } return {n:ps.length,by,on:!!MP.room}; }
+function mpHere(a){ const c=mpCount(); if(!c.on) return ''; const n=(c.by[a]||0)+(a==='w'?(c.by.r||0):0); return ` · <span style="color:${n?'#5ad0ff':'#8a96a6'}">👥 ${n}명</span>`; }
+function mpOnlineUI(){ const c=mpCount(), b=$('bOn'), h=$('hOn'); if(!b||!h) return;
+  if(!c.on){ b.style.display='none'; h.style.display='none'; return; }
+  const t='👥'+c.n; if(b.textContent!==t) b.textContent=t; b.style.display=c.n>1?'':'none'; const ht=` · 👥 지금 ${c.n}명 접속`; if(h.textContent!==ht) h.textContent=ht; h.style.display=''; }
+setInterval(mpOnlineUI,1000);
+
 async function mpAnnounce(p,on){ if(p.by&&!MP.names[p.by]) await mpNames([p]); const n=mpName(p); toast(on?`📢 ${n}가 접속했다`:`${n}가 나갔다`,on?'어딘가에서 자라기 시작했다':''); }
 const mpName=p=>(p&&p.by&&MP.names[p.by])||(p&&p.presence&&typeof p.presence.nm==='string'&&p.presence.nm.replace(/[<>&"']/g,'').slice(0,10))||'누군가';
 async function mpNames(peers){ const U=MP.user; if(!U||!U.profiles) return; const ids=[...new Set(peers.filter(p=>p.by&&!MP.names[p.by]).map(p=>p.by))]; if(!ids.length) return;
