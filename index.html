@@ -256,6 +256,15 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 #doomBan{position:fixed;left:50%;top:24%;transform:translate(-50%,-50%) scale(.7);opacity:0;pointer-events:none;z-index:31;text-align:center;font-weight:900;font-size:24px;color:#f4ecff;text-shadow:0 0 14px #6a4aa0,0 3px 0 #000;width:min(88vw,360px);box-sizing:border-box;padding:12px 14px;border-radius:14px;background:rgba(14,8,24,.78);border:1.5px solid rgba(176,138,255,.55)}
 #doomBan small{display:block;font-size:14px;letter-spacing:3px;color:#ffd77a;margin-bottom:4px}#doomBan i{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:#e8e0f4;margin-top:6px;line-height:1.5;text-shadow:0 1px 3px #000}
 #doomBan.show{animation:doomBan 5.2s ease-out forwards}
+#jpBan{position:fixed;left:50%;top:19%;transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;z-index:32;text-align:center;font-weight:900;color:#fff6d8;text-shadow:0 0 12px #ff9a20,0 2px 0 #5a3000;width:min(92vw,380px)}
+#jpBan small{display:block;font-size:15px;letter-spacing:4px;color:#ffd77a}#jpBan small b{font-size:20px;color:#fff}
+#jpBan .jr{display:flex;justify-content:center;gap:6px;margin-top:6px}
+#jpBan .js{width:46px;height:46px;border-radius:10px;background:rgba(40,18,6,.82);border:2px solid rgba(255,170,60,.55);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden;filter:blur(.6px) brightness(.8)}
+#jpBan .js img{max-width:36px;max-height:36px}#jpBan .js.on{filter:none;border-color:#ffd77a;box-shadow:0 0 14px #ffb040;animation:jpPop .3s ease-out}#jpBan .js.ev{border-color:#fff;box-shadow:0 0 18px #fff,0 0 30px #ffb040}
+#jpBan i{display:block;font-style:normal;font-size:12.5px;font-weight:700;color:#ffe9b8;margin-top:6px;line-height:1.45;text-shadow:0 1px 3px #000}
+#jpBan.show{animation:jpBan 3.6s ease-out forwards}#jpBan.jpBig .js.on{box-shadow:0 0 20px #ffd040,0 0 34px #ff8a20}
+@keyframes jpBan{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}8%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}16%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+@keyframes jpPop{0%{transform:scale(1.5)}100%{transform:scale(1)}}
 #doomBan.low{top:70%}
 @keyframes doomBan{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}8%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}14%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
 #doomV{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity 1.6s;background:radial-gradient(circle at 50% 58%,rgba(10,6,18,0) 18%,rgba(10,6,18,.55) 55%,rgba(6,3,12,.92) 100%)}
@@ -392,7 +401,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
   <div class="fb">기억 조각은 모닥불에서 쓴다 · 고른 길은 '갈래'에서 본다</div>
 </div>
 
-<div id="shopTag"></div><div id="fLootT"></div><div id="evoFlash"></div><div id="evoBan"></div><div id="doomV"></div><div id="holdV"></div><div id="doomBan"></div>
+<div id="shopTag"></div><div id="fLootT"></div><div id="evoFlash"></div><div id="evoBan"></div><div id="doomV"></div><div id="holdV"></div><div id="doomBan"></div><div id="jpBan"></div>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
 </script>
@@ -1224,7 +1233,7 @@ const TUNE_DEF={
   nsat:{n:'거리 색 진하기',v:1,min:0,max:1.8,st:.05},
   newb:{n:'새 사람 불씨 가호 세기',v:1,min:0,max:2,st:.1},
   ptxp:{n:'파티원 곁 경험 더(비율)',v:.15,min:0,max:1,st:.05},
-  bcv:{n:'바코드 각성 방식 (0 지금 · 1 쓰러지면 터짐 · 2 쌓이면 터짐)',v:0,min:0,max:2,st:1}}; // v2.32 비교용(44번 A7)
+  bcv:{n:'바코드 각성 방식 (0 예전 · 1 쓰러지면 터짐 · 2 쌓이면 터짐)',v:1,min:0,max:2,st:1}}; // v2.32 (44번 A7): 11-17 기획자 ㄱ — 기본 1 쓰러지면 터짐
 const TU=k=>(SV.tune&&typeof SV.tune[k]==='number'?SV.tune[k]:TUNE_DEF[k].v);
 // v2.24 새 사람 불씨 가호: 처음 걷는 사람은 강화가 없어 1분 반이면 쓰러졌다(33 2장). 산 강화 칸이 10개가 될 때까지 서서히 옅어진다.
 const newbK=()=>{ if((SV.ash||0)>0||location.search.includes('nonewb')) return 0; return Math.max(0,1-(SV.bought||0)/10)*TU('newb'); };
@@ -1760,6 +1769,7 @@ function zoneKilled(Z,mine,who){ if(MPF.bd.includes(Z.id)) return; MPF.bd+=Z.id;
   zonesRefresh(); dropsSync(); const by=mine?'':`${who||'누군가'}가 `;
   if(Z.mid){ const n=midsN(); toast(mine?B.bye:`${by}${B.name}를 보냈다`,`중간보스 ${n}/3 · 불씨 덩어리가 떨어졌다 — 먼저 줍는 사람 것`);
     if(n>=MID_N) setTimeout(()=>{ if(S&&S.phase!=='over') toast(gi('u_final')+' 파이널 보스 구역이 열렸다','중간보스 셋을 모두 보냈다 · 더 좋은 불씨가 기다린다'); },2600);
+    jpTry(Z,mine);
     if(BOT) DBG.mid=(DBG.mid||0)+1; save(); return; }
   const first=mine&&!SV.cleared[fk]; if(mine){ SV.cleared[fk]=(SV.cleared[fk]||0)+1; S.fDone=1; } save();
   for(const e of enemies){ if(e.dead) continue; e.dead=true; if(Math.random()<.3) burst(e.x,.6,e.z,2); } foxShots.length=0; if(S.hails) S.hails.length=0;
@@ -1779,6 +1789,47 @@ function zoneKilled(Z,mine,who){ if(MPF.bd.includes(Z.id)) return; MPF.bd+=Z.id;
    파이널 보스 뒤 3분 안에 모닥불 빛 안에 못 들어간 사람에게만 깨어난다. 이름도 체력 막대도 없다 — 쓰러뜨릴 수 없고, 빛 안으로 도망치는 수밖에.
    거대한 어둠 + 눈만 보임(그림자 그림을 검게 크게). 1·2막 규칙: 사람 흔적·말 없음. 혼자만의 연출(멀티 동기화 안 함). */
 let doomS=null, doomE=null;
+/* ============ v2.32 중간보스 잭팟 「혼불 터짐」 (44번 A11, 기획자 11-17 14:55 모두 ㄱ) ============
+   중간보스가 쓰러지면 보스 체력 5% 이상 깎은 사람은 모두 각자 받는다(혼자면 늘). 1개 60% · 3개 30% · 5개 10%.
+   가진 것만 오른다 — 각성·2차 각성·조합이 준비돼 있으면 그것부터. 게임은 멈추지 않고 연출 2초 동안 무적.
+   불씨 덩어리(장비)는 그대로 바닥 선착순 → 「같이 잡고 각자 잭팟 → 불씨 쟁탈」. 파이널은 판 끝이라 없음. */
+const JP_MIN=.05;
+function jpCount(){ const r=Math.random(); return r<.6?1:r<.9?3:5; }
+function jpOne(){ const W=S.W, P=S.P, E=S.evo;
+  for(const k in FUS){ const f=FUS[k]; if(f.char&&f.char!==S.char) continue; if(W[f.a]>=5&&W[f.b]>=5&&!S.fu[k]) return {kind:'fu',id:k,ic:f.ic,name:f.name,tag:'조합'}; }
+  for(const k in EVOS){ const ev=EVOS[k]; if(W[k]===5&&P[ev.need]&&!E[k]) return {kind:'evo',id:k,ic:WEAPONS[k].ic,name:ev.name,tag:'각성'};
+    if(E[k]&&(P[ev.need]||0)>=5&&!(S.evo2&&S.evo2[k])) return {kind:'evo2',id:k,ic:WEAPONS[k].ic,name:'진 '+ev.name,tag:'2차 각성'}; }
+  const c=[];
+  for(const k in W){ if(E[k]||W[k]>=5||S.sealed[k]) continue; c.push({kind:'w',id:k,ic:WEAPONS[k].ic,name:WEAPONS[k].name}); c.push(c[c.length-1]); } // 무기를 조금 더 자주
+  for(const k in P){ if(P[k]>=5||S.sealed['p_'+k]) continue; c.push({kind:'p',id:k,ic:PASSIVES[k].ic,name:PASSIVES[k].name}); }
+  if(!c.length) for(const k in W) if(W[k]>=5) c.push({kind:'star',id:k,ic:WEAPONS[k].ic,name:WEAPONS[k].name+' ★'});
+  if(!c.length) return {kind:'heal',id:'heal',ic:'♨',name:'따뜻한 불씨'};
+  return c[Math.floor(Math.random()*c.length)]; }
+function jpLab(c){ if(c.kind==='w') return `${c.name} ${S.W[c.id]}`; if(c.kind==='p') return `${c.name} ${S.P[c.id]}`; if(c.kind==='star') return `${c.name}${(S.star&&S.star[c.id])||''}`; if(c.kind==='heal') return c.name; return `${c.name}${c.tag?' · '+c.tag:''}`; }
+function jpTry(Z,mine){ if(!S||!Z||!Z.mid) return;
+  const solo=!mpFieldPeers().length&&!(DBG.fakePeers&&DBG.fakePeers.length), mx=MPF.bm[Z.id]||bossMaxFor(Z), myD=MPF.bdmg[Z.id]||0;
+  const ok=(solo&&mine)||(mx>0&&myD>=JP_MIN*mx);
+  if(BOT) (DBG.jpTry=DBG.jpTry||[]).push({z:Z.id,mine:!!mine,solo,ok,pct:mx?Math.round(myD/mx*1000)/10:0});
+  if(!ok){ if(myD>0) setTimeout(()=>{ if(S) toast('🔥 혼불이 스쳐 갔다',`보스 체력 5% 넘게 깎은 사람만 받는다 · 나는 ${mx?Math.round(myD/mx*100):0}%`); },1400); return; }
+  setTimeout(()=>{ if(S&&S.phase!=='over') jpRun(jpCount()); },500); }
+function jpRun(n){ const S0=S, P=player.root.position; S.jpInv=2.2; S.jpN=(S.jpN||0)+1; HS=Math.max(HS,.3); DBG.shake=Math.max(DBG.shake||0,n>=5?.9:.5); buzz(n>=5?[60,40,60,40,140]:[50,30,90]);
+  // 불꽃이 사방에서 몸으로 빨려 든다
+  for(let i=0;i<3;i++) er(P.x,P.z,6.5-i*1.4,.4,.65+i*.2,i?AMBER:GOLD,1.1);
+  for(let i=0;i<46;i++){ const a=Math.random()*6.283, r=3.5+Math.random()*3.5, t=.55+Math.random()*.2; ep(P.x+Math.cos(a)*r,.6+Math.random()*1.4,P.z+Math.sin(a)*r,-Math.cos(a)*r/t,.3,-Math.sin(a)*r/t,t,.32,i%3?AMBER:GOLD); }
+  const b=$('jpBan'); const pool=[...Object.keys(S.W).map(k=>WEAPONS[k].ic),...Object.keys(S.P).map(k=>PASSIVES[k].ic)]; if(!pool.length) pool.push('🔥');
+  if(b){ b.className=''; b.innerHTML=`<small>혼불 터짐${n>1?` · <b>${n}</b>`:''}</small><div class="jr">${'<span class="js"></span>'.repeat(n)}</div><i></i>`; void b.offsetWidth; b.classList.add('show'); if(n>=5) b.classList.add('jpBig'); }
+  const slots=b?[...b.querySelectorAll('.js')]:[], labs=new Map(); let spin=setInterval(()=>{ for(const el of slots) if(!el.dataset.d) el.innerHTML=pool[Math.floor(Math.random()*pool.length)]; },70);
+  try{ tone('sawtooth',180,520,.5,.06,.02); }catch(e){}
+  for(let i=0;i<n;i++) setTimeout(()=>{ if(S!==S0) return; const c=jpOne(); apply(c); const lb=jpLab(c); labs.delete(c.kind==='star'?'w:'+c.id:c.kind+':'+c.id); if(c.kind==='star') labs.delete('star:'+c.id); labs.set(c.kind==='star'?'star:'+c.id:c.kind+':'+c.id,lb); if(BOT) (DBG.jp=DBG.jp||[]).push(c.kind+':'+c.id);
+      const el=slots[i]; if(el){ el.dataset.d=1; el.innerHTML=c.ic; el.classList.add('on'); if(c.kind==='evo'||c.kind==='evo2'||c.kind==='fu') el.classList.add('ev'); }
+      const it=b&&b.querySelector('i'); if(it) it.innerHTML=[...labs.values()].join(' · ');
+      const Q=player.root.position; er(Q.x,Q.z,.4,2.6+i*.4,.45,GOLD,1); epBurst(Q.x,1.1,Q.z,14,3.5,.5,.3,GOLD,3);
+      try{ const f=[523,659,784,988,1175][i%5]; tone('triangle',f,f*1.01,.22,.11,.005); }catch(e){}
+      if(i===n-1){ clearInterval(spin); spin=0; try{ if(n>=5) sfx.jing(); else sfx.lvl(); }catch(e){}
+        if(n>=5){ const Q2=player.root.position; for(let k=0;k<3;k++) er(Q2.x,Q2.z,.5,5+k*2.5,.8+k*.2,GOLD,1); epBurst(Q2.x,1,Q2.z,60,6,.9,.45,GOLD,4); }
+        setTimeout(()=>{ if(b) b.classList.remove('show','jpBig'); },1500); }
+    },420+i*300);
+  setTimeout(()=>{ if(spin) clearInterval(spin); },420+n*300+200); }
 function doomBan(top,mid,small,low){ const b=$('doomBan'); if(!b) return; b.classList.toggle('low',!!low); b.innerHTML=`<small>${top}</small>${mid}<i>${small}</i>`; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
 function doomStart(){ const P=player.root.position; S.doom={t:0,dur:9,x:P.x,z:P.z-16}; S.fLoot=0;
   if(S.emG&&S.emG.length){ S.doomLost=S.emG.length; S.emG=[]; S.ember=0; lootHud(); toast(`🔥 불씨 덩어리 ${S.doomLost}개가 꺼졌다`,'3분 안에 모닥불에 닿지 못했다'); }
@@ -2900,7 +2951,7 @@ function downTick(dt){ if(!S.down) return; const D=S.down, P=player.root.positio
   if(D.t<=0){ S.down=null; try{ player.bb.rotation.z=0; player.mat.opacity=1; }catch(e){} downBan(); S.hp=0; gameOver(); return; }
   if(((D.t*4)|0)!==D._f){ D._f=(D.t*4)|0; downBan(); } }
 function hurtPlayer(n,once=false,soft=false){ n*=TU('edmg')*(1-.45*Math.min(1.5,S.nb||0));
-  if(S.phase!=='play'||S.inSafe||S.down) return; if(once&&(S.iframe||0)>0) return; if(S.dash) return;
+  if(S.phase!=='play'||S.inSafe||S.down) return; if(once&&(S.iframe||0)>0) return; if(S.dash) return; if((S.jpInv||0)>0) return;
   n*=st().armor; if(S.rush>0) n*=.4; S.hp-=n; S.hurtT=Math.min(1,S.hurtT+n*.08); sfx.hurt();
   if(once){ const P0=player.root.position; dnum(P0.x,1.9,P0.z,'-'+Math.max(1,Math.round(n)),'hurt'); if(!soft) HS=Math.max(HS,.07); }
   // v2.1 피격 반응: 진동 · 붉은 번쩍임 · 깜빡임 · 밀려남 (이어지는 접촉은 0.26초마다 한 번)
@@ -3274,7 +3325,7 @@ function botInput(){
 /* ============ 한 프레임 ============ */
 const camT=new THREE.Vector3(); let hoseBeam=null;
 function update(dt){
-  S.t+=dt; const s=st(), P=player.root.position; const P0x=P.x, P0z=P.z; if(S.iframe>0) S.iframe-=dt; if(S.P.regen) S.hp=Math.min(S.maxhp,S.hp+.4*S.P.regen*dt);
+  S.t+=dt; const s=st(), P=player.root.position; const P0x=P.x, P0z=P.z; if(S.iframe>0) S.iframe-=dt; if(S.jpInv>0) S.jpInv-=dt; if(S.P.regen) S.hp=Math.min(S.maxhp,S.hp+.4*S.P.regen*dt);
   let ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+jv.x, iz=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+jv.y;
   if(BOT){ const b=botInput(); ix=b.x; iz=b.z; }
   if(S.down){ ix=0; iz=0; }
