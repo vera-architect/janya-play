@@ -1,0 +1,7 @@
+{
+  "appId": "com.janya.play",
+  "appName": "잔야",
+  "webDir": "www",
+  "android": { "backgroundColor": "#14121e" },
+  "server": { "androidScheme": "https" }
+}

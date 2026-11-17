@@ -1,0 +1,47 @@
+# 잔야 APK 만들기: main에 올라가면(또는 Actions 탭에서 손으로) 웹 게임을 앱으로 감싸 APK를 만든다.
+# 결과: Releases에 「janya-<버전>.apk」 — 휴대폰에서 받아 설치(출처를 알 수 없는 앱 허용 필요).
+name: APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['index.html', 'img/**', 'app/**', '.github/workflows/apk.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: 웹 게임 넣기
+        working-directory: app
+        run: |
+          npm install --no-audit --no-fund
+          mkdir -p www && cp ../index.html www/ && cp -r ../img www/
+          npx cap sync android
+      - name: APK 굽기
+        working-directory: app/android
+        run: |
+          chmod +x gradlew
+          if [ -n "${{ secrets.JANYA_KEYSTORE_B64 }}" ]; then
+            echo "${{ secrets.JANYA_KEYSTORE_B64 }}" | base64 -d > app/janya.keystore
+            ./gradlew assembleRelease -Pjks=janya.keystore -Pjkpass="${{ secrets.JANYA_KEY_PASS }}" --no-daemon
+            cp app/build/outputs/apk/release/app-release.apk ../../janya.apk
+          else
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk ../../janya.apk
+          fi
+      - name: 버전 이름
+        id: v
+        run: echo "tag=apk-$(date -u +%Y%m%d-%H%M)" >> $GITHUB_OUTPUT
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.v.outputs.tag }}
+          name: 잔야 APK ${{ steps.v.outputs.tag }}
+          body: "휴대폰에서 아래 janya.apk를 받아 설치합니다. (설정에서 「출처를 알 수 없는 앱」 허용이 필요할 수 있어요)"
+          files: janya.apk
+          make_latest: true

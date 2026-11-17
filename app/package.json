@@ -1,0 +1,11 @@
+{
+  "name": "janya-app",
+  "private": true,
+  "version": "2.31.0",
+  "description": "잔야 안드로이드 앱 껍데기 (Capacitor) — 웹 게임 index.html + img를 앱 안에 넣는다",
+  "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/cli": "8.6.2",
+    "@capacitor/core": "8.6.2"
+  }
+}

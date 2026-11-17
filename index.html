@@ -10,7 +10,7 @@
 </script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>잔야(가제) — 1단계 맛보기 v2.29</title>
+<title>잔야(가제) — 1단계 맛보기 v2.31</title>
 <style>
 html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:none;
   font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#ece1cc;
@@ -322,7 +322,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 <div class="ov show" id="title">
   <div style="position:relative;height:170px;width:300px;margin-bottom:6px"><img src="img/gumiho_front.webp" style="position:absolute;right:-10px;top:0;height:150px;opacity:.35;filter:brightness(.6)"><img src="img/player_front.webp" style="position:absolute;left:70px;top:14px;height:156px"></div>
   <h1>잔 야</h1>
-  <div class="sub">(가제) · 1단계 맛보기 v2.29</div>
+  <div class="sub">(가제) · 1단계 맛보기 v2.31</div>
   <div class="who">모닥불 거점 · 서울 지도 · 깨어난 자 셋<br>고르는 대로 갈라지는 밤</div>
   <div class="btn big" id="bStart">눈을 뜬다</div>
   <div class="btn" id="bDex" style="margin-top:12px">도감 · 저승의 것들</div>
@@ -1737,11 +1737,11 @@ function dropList(){ const L=[];
   for(const Z of MY.zones||[]) if(MPF.bd.includes(Z.id)){ const n=Z.mid?1:2, bp=MPF.bp[Z.id]; let cx=bp?bp[0]:Z.x, cz=bp?bp[1]:Z.z; if(MY.blocked(cx,cz)){ let ok=false; for(let rr=1.5;rr<=9&&!ok;rr+=1.5) for(let k=0;k<8;k++){ const a=k*.785, tx=cx+Math.cos(a)*rr, tz=cz+Math.sin(a)*rr; if(!MY.blocked(tx,tz)){ cx=tx; cz=tz; ok=true; break; } } if(!ok){ cx=Z.x; cz=Z.z; } }
     for(let i=0;i<n;i++){ const id=`${MPF.rd}${Z.id}${i}`, a=hash01(id)*6.283, rr2=n>1?1.6:.6; let x=cx+Math.cos(a)*rr2, z=cz+Math.sin(a)*rr2; if(MY.blocked(x,z)){ x=cx; z=cz; } L.push({id,x,z,g:gradeOf(id,!Z.mid)}); } }
   for(const d of MPF.dr) L.push({id:d[0],x:d[1],z:d[2],g:d[3]});
-  for(const p of mpFieldPeers()){ const dr=p.presence.dr; if(!Array.isArray(dr)) continue; for(const d of dr.slice(0,8)) if(Array.isArray(d)&&d.length===4&&typeof d[1]==='number'&&typeof d[2]==='number') L.push({id:String(d[0]).slice(0,24),x:d[1],z:d[2],g:Math.max(0,Math.min(3,d[3]|0))}); }
+  for(const p of mpFieldPeers()){ const dr=p.presence.dr; if(!Array.isArray(dr)) continue; for(const d of dr.slice(0,8)) if(Array.isArray(d)&&d.length===4&&typeof d[1]==='number'&&typeof d[2]==='number') L.push({id:String(d[0]).slice(0,24),x:d[1],z:d[2],g:Math.max(0,Math.min(3,d[3]|0)),pty:ptRaw(p)}); }
   return L; }
 function pickedBy(){ const m=new Map(); for(const id of MPF.pk) m.set(id,'me'); for(const id of MPF.pkOld) if(!m.has(id)) m.set(id,'old'); for(const p of mpFieldPeers()){ const pk=p.presence.pk; if(Array.isArray(pk)) for(const id of pk.slice(0,40)) if(!m.has(String(id))) m.set(String(id),p); } return m; }
 function dropsSync(){ if(!FIELD||!S||!MY.zones) return; const L=dropList(), pk=pickedBy(), live=new Set(), P=player.root.position;
-  for(const d of L){ if(pk.has(d.id)||live.has(d.id)) continue; live.add(d.id); if(!MPF.drops.has(d.id)){ const o=mkSpot(d.x,d.z,true,null,true); o.did=d.id; o.gr=d.g; o.life=1e9; MPF.drops.set(d.id,o); if(/^\d+F\d$/.test(d.id)&&S.scramble&&performance.now()-MPF.finT<2500){ o.lock=3+(d.id.endsWith('1')?.25:0); o.lk0=o.lock; } } }
+  for(const d of L){ if(pk.has(d.id)||live.has(d.id)) continue; live.add(d.id); if(!MPF.drops.has(d.id)){ const o=mkSpot(d.x,d.z,true,null,true); o.did=d.id; o.gr=d.g; o.dpty=!!d.pty; o.life=1e9; MPF.drops.set(d.id,o); if(/^\d+F\d$/.test(d.id)&&S.scramble&&performance.now()-MPF.finT<2500){ o.lock=3+(d.id.endsWith('1')?.25:0); o.lk0=o.lock; } } }
   for(const [id,o] of MPF.drops) if(!live.has(id)){ rmSpot(o); MPF.drops.delete(id); const who=pk.get(id); if(who&&who!=='me'&&who!=='old'&&Math.hypot(o.x-P.x,o.z-P.z)<40) toast(`🔥 ${mpName(who)}가 불씨 덩어리를 주웠다`,'쫓아가서 쓰러뜨리면 떨어진다'); } }
 function fieldZone(){ const P=player.root.position;
   if(boss.alive){ if(boss.dying) return; const Z=zoneById(boss.zid)||MY.zone; if(Math.hypot(P.x-Z.x,P.z-Z.z)>(Z.mid?45:55)){ boss.alive=false; boss.root.visible=false; bossL.on=false; bossL.l.intensity=0; slamRing.visible=false; teleMesh.visible=false; $('boss').style.display='none'; toast(boss.def.name+'가 물러났다','구역 밖까지는 쫓아오지 않는다 · 준 피해는 남는다'); } return; }
@@ -1750,7 +1750,7 @@ function fieldZone(){ const P=player.root.position;
     if(!Z.mid&&!midsDone()){ if(S.t-MPF.lockT>6){ MPF.lockT=S.t; toast('🔒 아직 열리지 않았다',`중간보스 ${midsN()}/3 · 셋을 모두 보내야 파이널 보스가 깨어난다`); } continue; }
     S.bossKey=Z.key; S.bossZone=S.field; S.bossZid=Z.id; spawnBoss(); break; } }
 function bossDefeatedF(){ const Z=zoneById(boss.zid)||(MY.zones||[]).find(z=>!z.mid); if(Z) zoneKilled(Z,true); }
-function zoneKilled(Z,mine,who){ if(MPF.bd.includes(Z.id)) return; MPF.bd+=Z.id; if(!Z.mid){ MPF.finT=performance.now(); S.scramble=(mpFieldPeers().length>0||!!MP.ties||!!(DBG.fakePeers&&DBG.fakePeers.length))?1:0; } if(mine&&!MPF.bp[Z.id]){ const bpp=boss.root.position; MPF.bp[Z.id]=[Math.round(bpp.x*10)/10,Math.round(bpp.z*10)/10]; } const fk=S.field||'myeong', B=BOSSDEF[Z.key];
+function zoneKilled(Z,mine,who){ if(MPF.bd.includes(Z.id)) return; MPF.bd+=Z.id; if(!Z.mid){ MPF.finT=performance.now(); S.scramble=(mpFieldPeers().length>0||!!MP.ties||!!(DBG.fakePeers&&DBG.fakePeers.length))?1:0; if(PTY.id&&mpFieldPeers().some(ptRaw)){ S.ptBroke=1; S.scramble=1; DBG.ptBroke=(DBG.ptBroke||0)+1; } } if(mine&&!MPF.bp[Z.id]){ const bpp=boss.root.position; MPF.bp[Z.id]=[Math.round(bpp.x*10)/10,Math.round(bpp.z*10)/10]; } const fk=S.field||'myeong', B=BOSSDEF[Z.key];
   if(!mine&&boss.alive&&boss.zid===Z.id){ boss.alive=false; boss.root.visible=false; bossL.on=false; bossL.l.intensity=0; slamRing.visible=false; teleMesh.visible=false; }
   if(!boss.alive) $('boss').style.display='none';
   if(mine){ S.bossesW=(S.bossesW||0)+1; S.bonus=(S.bonus||0)+(Z.mid?20:50); }
@@ -1765,7 +1765,7 @@ function zoneKilled(Z,mine,who){ if(MPF.bd.includes(Z.id)) return; MPF.bd+=Z.id;
   const crowd=!!S.scramble;
   const after=()=>{ // v2.15b (기획자 21:29): 선택 창 없이 안내 글 — 3분 안에 모닥불로, 남은 자에겐 이름 없는 그것이 깨어난다
     if(crowd){ tieCut(); HS=Math.max(HS,.5); DBG.shake=Math.max(DBG.shake||0,.7); buzz([60,40,120]);
-      doomBan('✂ 함께 싸운 끈이 끊어졌다','불씨는 하나','돌아갈 길은 각자 · 불씨를 든 사람은 모두가 노린다');
+      if(S.ptBroke) doomBan('✂ 함께 싸운 끈이 끊어졌다','파티도 여기까지 · 불씨는 하나','돌아갈 길은 각자 · <b>파티원도 덮친다</b> · 판이 끝나면 다시 한 파티'); else doomBan('✂ 함께 싸운 끈이 끊어졌다','불씨는 하나','돌아갈 길은 각자 · 불씨를 든 사람은 모두가 노린다');
       setTimeout(()=>{ if(S&&S.phase==='play') doomBan('불씨가 솟았다 · <b>3초</b> 뒤 떨어진다','<b>3분</b> 안에 모닥불 빛 안으로','먼저 줍는 사람 것 · 빛 안에 닿으면 <b>판 끝</b><br>남은 자에게는 <b>이름 없는 그것</b>이 깨어난다'); },2600);
       if(first) setTimeout(()=>toast('불이 커졌다','불 '+fireLv()+'단계 · 들고 있는 조각 +50'),6200);
       if(BOT&&mine) DBG.victory={t:S.t,lv:S.lv,kills:S.kills,hp:S.hp,zone:S.field+'-field'}; return; }
@@ -1798,11 +1798,11 @@ function doomTick(dt,P){ const D=S.doom; D.t+=dt; const k=Math.min(1,D.t/2.2);
   if(D.t>=D.dur&&!DBG.doomSafe){ doomEnd(); S.hp=0; gameOver(); } }
 function doomEnd(){ S.doom=null; if(doomS){ doomS.visible=doomE.visible=false; } const v=$('doomV'); if(v) v.classList.remove('on'); const el=$('fLootT'); if(el){ el.classList.remove('warn'); el.dataset.t=''; } }
 // v2.17 (기획자 01:07 3ㄱ+ㄴ): 파이널 뒤 모닥불 빛 안에 닿으면 판 끝 → 기지로 정산. 다음 판은 Lv1부터(장비·강화는 그대로)
-function roundEnd(fled){ if(S.phase!=='play') return; S.roundWon=fled?'fled':'won';
+function roundEnd(fled){ if(S.phase!=='play') return; S.roundWon=fled?'fled':'won'; if(S.ptBroke&&PTY.id) setTimeout(()=>toast('🤝 다시 한 파티','판이 끝나 끈이 다시 이어졌다'),1800);
   // v2.27 결과판: 같이 깎은 몫 · 지킨 불씨 · 빼앗은 불씨 — 빈손이면 깎은 몫만큼 조각
   const held=(S.kept||0)+(S.emG||[]).length, coop=!!S.cpP||!!S.scramble, share=S.cpA>0?Math.max(0,Math.min(1,(S.cpM||0)/S.cpA)):1; let cpB=0;
   if(coop&&!held){ cpB=Math.round(10+50*share); S.bonus=(S.bonus||0)+cpB; }
-  const cpLine=coop?`<div class="cpBox"><b>이번 판</b><br>🤝 같이 깎은 몫 <b>${Math.round(share*100)}%</b><br>${held?`🔥 끝까지 지킨 불씨 <b>${held}개</b>`:`🔥 불씨는 남의 손에 · 깎은 몫만큼 조각 <b>+${cpB}</b>`}${S.stole?`<br>⚔ 빼앗은 불씨 <b>${S.stole}개</b>`:''}</div>`:'';
+  const cpLine=coop?`<div class="cpBox"><b>이번 판</b><br>🤝 같이 깎은 몫 <b>${Math.round(share*100)}%</b><br>${held?`🔥 끝까지 지킨 불씨 <b>${held}개</b>`:`🔥 불씨는 남의 손에 · 깎은 몫만큼 조각 <b>+${cpB}</b>`}${S.stole?`<br>⚔ 빼앗은 불씨 <b>${S.stole}개</b>${S.stoleP?` <small>(파티원에게서 ${S.stoleP})</small>`:''}`:''}</div>`:'';
   DBG.cp={share,held,cpB,coop}; DBG.roundEnd=(DBG.roundEnd||0)+1; doomBan('판 끝',fled?'그것은 불빛을 넘지 못했다':'모닥불에 닿았다','들고 온 것은 모두 내 것 · 다음 판은 <b>Lv1</b>부터 · 장비는 그대로',false); sfx.lvl(); gameOver('rest'); if(cpLine){ const r=$('rstat'); if(r) r.innerHTML=cpLine+r.innerHTML; } }
 // (옛 v2.10~2.16) 3분이 끝나면 새 판 — v2.17부터 쓰지 않음(시험용으로만 남김)
 function fieldReset(){ S.fLoot=0; S.fDone=0; S.cycle=(S.cycle||0)+1; let lost=0; if(S.emG&&S.emG.length&&!S.inSafe){ lost=S.emG.length; S.emG=[]; S.ember=0; lootHud(); } const n=emberConfirm(); clearSpots(); MPF.drops.clear();
@@ -2225,10 +2225,10 @@ function areaHit(x,z,R,dmg,fn,kb=0){ near(x,z,R,e=>{ const dx=e.x-x,dz=e.z-z,d=M
 const luckMul=()=>1+.35*((S&&S.P.luck)||0);
 // 윷: 도 개 걸 윷 모
 const YUT=['도','개','걸','윷','모'];
-function throwYut(ox,oz,s,chain){ const L=S.W.yut, t=nearest(ox,oz,10);
+function throwYut(ox,oz,s,chain,sh){ const L=S.W.yut, t=nearest(ox,oz,10);
   const tx=t?t.x:ox+S.face.x*4, tz=t?t.z:oz+S.face.z*4;
-  if(br('yut')==='b'){ const cand=[]; near(ox,oz,9,e=>{ if(!e.d.treasure) cand.push(e); }); for(let i=0;i<4;i++){ const c=cand.length?cand[Math.floor(Math.random()*cand.length)]:null; S.yuts.push({x0:ox,z0:oz,tx:c?c.x:tx+rr(-1.5,1.5),tz:c?c.z:tz+rr(-1.5,1.5),t:0,dur:.45,x:ox,z:oz,y:0,rot:rr(0,6),solo:true,main:i===0,chain}); } }
-  else for(let i=0;i<4;i++) S.yuts.push({x0:ox,z0:oz,tx:tx+rr(-.5,.5),tz:tz+rr(-.5,.5),t:0,dur:.5,x:ox,z:oz,y:0,rot:rr(0,6),main:i===0,chain});
+  if(br('yut')==='b'){ const cand=[]; near(ox,oz,9,e=>{ if(!e.d.treasure) cand.push(e); }); for(let i=0;i<4;i++){ const c=cand.length?cand[Math.floor(Math.random()*cand.length)]:null; S.yuts.push({x0:ox,z0:oz,tx:c?c.x:tx+rr(-1.5,1.5),tz:c?c.z:tz+rr(-1.5,1.5),t:0,dur:.45,x:ox,z:oz,y:0,rot:rr(0,6),solo:true,main:i===0,chain,sh,s:sh?s:null}); } }
+  else for(let i=0;i<4;i++) S.yuts.push({x0:ox,z0:oz,tx:tx+rr(-.5,.5),tz:tz+rr(-.5,.5),t:0,dur:.5,x:ox,z:oz,y:0,rot:rr(0,6),main:i===0,chain,sh,s:sh?s:null});
   sfx.yut(); }
 function rollYut(){ if(S.fu.yutpan) return Math.random()<.3?5:4;
   let w=[.22,.36,.26,.12,.04]; const lk=(S.P.luck||0)+(br('yut')==='a'?2:0); for(let i=0;i<lk;i++){ w[0]*=.8; w[1]*=.9; w[3]*=1.15; w[4]*=1.35; }
@@ -2237,7 +2237,55 @@ function landYut(y,s){ const L=S.W.yut; if(S.fu.patyut) fireBeans(y.tx,y.tz,.8,s
   if(y.solo){ areaHit(y.tx,y.tz,1*s.area,(12+5*L)*s.might,null,3); fx(y.tx,y.tz,1,[1,.85,.5],.25); if(!y.main) return; }
   const n=rollYut(), R=(.9+.32*n)*s.area, dmg=(9+4*L)*n*s.might*(n===5?1.6:1);
   if(!y.solo){ areaHit(y.tx,y.tz,R,dmg,null,n>=4?7:3); fx(y.tx,y.tz,R,n===5?[1,.62,.2]:n===4?[1,.8,.3]:[1,.95,.75],.35); }
-  burst(y.tx,.5,y.tz,n*2,2.5); if(n>=4){ if(n===5||(!S.fu.yutpan&&y.chain===0)) toast(YUT[n-1]+'!','한 번 더 던진다'); DBG.shake=Math.max(DBG.shake||0,.3); if(y.chain<3){ S.yutAgain=.3; S.yutChain=y.chain+1; } } }
+  burst(y.tx,.5,y.tz,n*2,2.5); if(n>=4){ if(n===5||(!S.fu.yutpan&&y.chain===0)) toast(YUT[n-1]+'!','한 번 더 던진다'); DBG.shake=Math.max(DBG.shake||0,.3); if(y.chain<3&&!y.sh){ S.yutAgain=.3; S.yutChain=y.chain+1; } } }
+// v2.31 그림자 분신이 모든 무기를 따라 쓴다 (기획자 11-17 「그림자는 공격하는 게 맞나?」 → 전엔 20종 중 5종만)
+// 그림자 몫(sm) 배율 · 칠 때 보라 고리 + 그림자 몸이 보랏빛으로 번쩍. 땅에 놓는 무기(금줄·장승·팽이)는 그림자도 하나씩 더.
+const SHV=[.72,.5,1];
+function shFx(x,z,R){ fx(x,z,R,SHV,.25); S.shFl=.3; }
+function shadowWeapons(dt,s,P){ DBG.shOn=1; try{ shadowWeapons0(dt,s,P); } finally { DBG.shOn=0; } }
+function shadowWeapons0(dt,s,P){ const sm=shadowMult(); if(!sm||!shadowP.root.visible) return; const W=S.W,E=S.evo,M0=s.might,SP=shadowPos(), s2=Object.assign({},s);
+  const m=k=>{ s2.might=M0*pm(k)*sm; return s2.might; };
+  // 소방 도끼: 그림자가 둘레를 한 바퀴 벤다
+  if(W.axe&&ready('sh_axe',dt,E.axe?.7:.9)){ const R=(E.axe?2.3:1.7)*s.area, n=Math.min(6,E.axe?6:[1,2,2,3,4][W.axe-1]); areaHit(SP.x,SP.z,R,(12+5*W.axe)*m('axe')*(E.axe?1.4:1)*(.4+.17*n),null,3); shFx(SP.x,SP.z,R); }
+  // 물줄기: 가까운 괴수 쪽으로 짧게 뿜는다
+  if(W.hose&&ready('sh_hose',dt,(E.hose?1.2:2.1-.17*W.hose)*s.cd)){ const f=aimFrom(SP.x,SP.z), R=(3+.4*W.hose)*s.area, dmg=(22+11*W.hose)*m('hose')*.12;
+    near(SP.x+f.x*R*.5,SP.z+f.z*R*.5,R*.6,e=>{ const ex=e.x-SP.x,ez=e.z-SP.z,d=Math.hypot(ex,ez)||1; if(d>R+e.d.r) return; if((ex*f.x+ez*f.z)/d<.75) return; damage(e,dmg,f.x,f.z,4); });
+    if(boss.alive&&Math.hypot(boss.x-SP.x,boss.z-SP.z)<R+1) damageBoss(dmg);
+    for(let k=0;k<6;k++){ const w=water.items[waterI=(waterI+1)%water.n], aa=Math.atan2(f.z,f.x)+rr(-.3,.3), v=rr(6,9)*R/4; w.life=R/v; w.x=SP.x; w.z=SP.z; w.y=.9; w.vx=Math.cos(aa)*v; w.vz=Math.sin(aa)*v; w.vy=rr(-.3,.6); }
+    shFx(SP.x+f.x*R*.5,SP.z+f.z*R*.5,R*.5); }
+  // 소금 길: 그림자도 소금을 흘린다
+  if(W.salt){ S.shSD=(S.shSD||0)+dt; if(S.shSD>.5&&Math.hypot(SP.x-(S.shSx||0),SP.z-(S.shSz||0))>.4){ S.shSD=0; S.shSx=SP.x; S.shSz=SP.z; salts.push({x:SP.x,z:SP.z,t:0,life:(3.5+.6*W.salt)*s.dur,r:.5*s.area,m:sm}); if(salts.length>260) salts.shift(); } }
+  // 부적: 그림자도 몇 장 붙인다
+  if(W.talis&&ready('sh_talis',dt,(2.3-.2*W.talis)*s.cd*2.2)){ const n=Math.max(1,Math.round(((W.talis>=4?2:1)+s.amount)*sm*.5)), cand=[]; near(SP.x,SP.z,6,e=>{ if(!e.talis&&!e.d.treasure) cand.push(e); });
+    for(let i=0;i<n&&cand.length;i++){ const e=cand.splice(Math.floor(Math.random()*cand.length),1)[0]; e.talis={gen:0}; fx(e.x,e.z,.5,SHV,.2); } if(n) S.shFl=.3; }
+  // 만파식적: 그림자 둘레만 잠깐 멈춘다
+  if(W.flute&&ready('sh_flute',dt,(11-.8*W.flute)*s.cd*1.3)){ const R=spawnR()*.45, dur=(1+.25*W.flute)*s.dur*sm; for(const e of enemies){ if(Math.hypot(e.x-SP.x,e.z-SP.z)<R) e.freeze=Math.max(e.freeze,dur); } shFx(SP.x,SP.z,R); }
+  // 도깨비 방망이: 그림자가 앞을 내리친다
+  if(W.club&&ready('sh_club',dt,(1.7-.12*W.club)*s.cd)){ const f=aimFrom(SP.x,SP.z), R=(1.9+.15*W.club)*s.area, cx=SP.x+f.x*R*.45, cz=SP.z+f.z*R*.45; areaHit(cx,cz,R*.55,(14+6*W.club)*m('club')*.5,null,3); fx(cx,cz,R*.55,SHV,.22,Math.atan2(f.z,f.x)); S.shFl=.3; }
+  // 윷가락: 그림자도 던진다(한 번 더 던지기는 없음)
+  if(W.yut&&ready('sh_yut',dt,(2.7-.15*W.yut)*s.cd*1.15)){ m('yut'); throwYut(SP.x,SP.z,s2,9,sm); S.shFl=.3; }
+  // 금줄: 그림자 말뚝 줄(따로 셋까지)
+  if(W.geumjul){ const L=W.geumjul; S.shPosts=S.shPosts||[]; if(ready('sh_gj',dt,(2.3-.15*L)*s.cd*1.3)){ S.shPosts.push({x:SP.x,z:SP.z,t:0,life:(5+.6*L)*s.dur}); while(S.shPosts.length>3) S.shPosts.shift(); }
+    for(let i=S.shPosts.length-1;i>=0;i--){ const q=S.shPosts[i]; q.t+=dt; if(q.t>q.life) S.shPosts.splice(i,1); }
+    S.shSegs=[]; for(let i=1;i<S.shPosts.length;i++) S.shSegs.push([S.shPosts[i-1],S.shPosts[i]]); if(S.shPosts.length) S.shSegs.push([S.shPosts[S.shPosts.length-1],{x:SP.x,z:SP.z}]);
+    S.shGjT=(S.shGjT||0)-dt; if(S.shGjT<=0){ S.shGjT=.25; const dmg=(7+4*L)*m('geumjul'); let bh=false; for(const [a,b] of S.shSegs) if(hitSeg(a.x,a.z,b.x,b.z,.35,e=>{ damage(e,dmg); e.slow=Math.min(e.slow,.5); })) bh=true; if(bh) damageBoss(dmg*.8); } } else { S.shPosts=null; S.shSegs=null; }
+  // 장승: 그림자 장승 하나 더
+  if(W.jang&&!S.jangs.some(J=>J.sh)&&ready('sh_jang',dt,(6.5-.5*W.jang)*s.cd*1.2)){ const f=S.face, J=mkJang(SP.x-f.x*1.6,SP.z-f.z*1.6,W.jang,s); J.sh=sm; S.jangs.push(J); shFx(J.x,J.z,1.4); }
+  // 방패연: 그림자 연 하나
+  if(W.kite){ const L=W.kite, R=(2.6+.25*L)*s.area; S.shKA=(S.shKA||0)+dt*(1.2+.1*L); const k={x:SP.x+Math.cos(-S.shKA)*R,z:SP.z+Math.sin(-S.shKA)*R*.85}; S.shKite=k;
+    S.shKT=(S.shKT||0)-dt; if(S.shKT<=0){ S.shKT=.25; if(hitSeg(SP.x,SP.z,k.x,k.z,.25,e=>damage(e,(6+3*L)*m('kite')*.5))) damageBoss((6+3*L)*s2.might*.3); areaHit(k.x,k.z,.8,(10+5*L)*s2.might*.5,null,4); } } else S.shKite=null;
+  // 팽이: 그림자 팽이 하나 더
+  if(W.top&&!S.tops.some(q=>q.sh)&&ready('sh_top',dt,(3-.2*W.top)*s.cd*1.3)){ const a=rr(0,6.28); S.tops.push({x:SP.x,z:SP.z,vx:Math.cos(a)*5,vz:Math.sin(a)*5,en:1,t:0,sh:sm}); S.shFl=.3; }
+  // 하회탈: 그림자 웃음(탈놀이 조합이 있으면 그쪽이 한다)
+  if(W.mask&&!S.fu.talnori&&ready('sh_mask',dt,(6.5-.4*W.mask)*s.cd*1.2)){ const L=W.mask, R=(3+.3*L)*s.area*.7, t=(1.4+.15*L)*sm, dmg=(8+4*L)*m('mask');
+    near(SP.x,SP.z,R,e=>{ const dx=e.x-SP.x,dz=e.z-SP.z,d=Math.hypot(dx,dz)||1; if(d>R+e.d.r) return; e.fear=Math.max(e.fear||0,t); damage(e,dmg,dx/d,dz/d,3); }); shFx(SP.x,SP.z,R); }
+  // 합죽선: 그림자 부채질
+  if(W.fan&&ready('sh_fan',dt,(2.8-.2*W.fan)*s.cd)){ const L=W.fan, f=aimFrom(SP.x,SP.z), R=(3.4+.3*L)*s.area*.7, dmg=(6+3*L)*m('fan')*.6;
+    near(SP.x,SP.z,R,e=>{ const ex=e.x-SP.x,ez=e.z-SP.z,d=Math.hypot(ex,ez)||1; if(d>R+e.d.r) return; if((ex*f.x+ez*f.z)/d<.45) return; damage(e,dmg,ex/d,ez/d,e.d.treasure?2:10); }); fx(SP.x,SP.z,R,SHV,.3,Math.atan2(f.z,f.x)); S.shFl=.3; }
+  // 각궁: 그림자 화살(그림자 궁수 조합이 있으면 그쪽이 한다)
+  if(W.bow&&!S.fu.gungsu&&ready('sh_bow',dt,(1.8-.12*W.bow)*s.cd)){ const f=aimFrom(SP.x,SP.z), a=Math.atan2(f.z,f.x); S.arrows.push({x:SP.x,z:SP.z,vx:Math.cos(a)*18,vz:Math.sin(a)*18,life:13/18,dmg:(16+7*W.bow)*m('bow'),hit:new Set(),a,sh:1}); S.shFl=.3; }
+  s.might=M0;
+}
 function weapons2(dt,s,P){ const M0=s.might;
   const W=S.W,E=S.evo,F=S.fu;
   // 윷가락
@@ -2245,7 +2293,7 @@ function weapons2(dt,s,P){ const M0=s.might;
   if(W.yut&&ready('yut',dt,(2.7-.15*W.yut)*s.cd)) throwYut(P.x,P.z,s,0);
   if(S.yutAgain>0){ S.yutAgain-=dt; if(S.yutAgain<=0) throwYut(P.x,P.z,s,S.yutChain); }
   for(let i=S.yuts.length-1;i>=0;i--){ const y=S.yuts[i]; y.t+=dt; const k=Math.min(1,y.t/y.dur); y.x=y.x0+(y.tx-y.x0)*k; y.z=y.z0+(y.tz-y.z0)*k; y.y=.2+Math.sin(k*Math.PI)*2.4; y.rot+=dt*14;
-    if(k>=1){ S.yuts.splice(i,1); if(y.main||y.solo) landYut(y,s); } }
+    if(k>=1){ S.yuts.splice(i,1); if(y.main||y.solo) landYut(y,y.s||s); } }
   // 금줄: 말뚝을 박고 줄을 잇는다. 줄을 넘는 것은 다친다
   s.might=M0*pm('geumjul');
   if(W.geumjul){ const L=W.geumjul;
@@ -2260,13 +2308,13 @@ function weapons2(dt,s,P){ const M0=s.might;
   // 장승: 세워 두면 괴수가 끌려온다
   s.might=M0*pm('jang');
   if(W.jang){ const L=W.jang, mx=E.jang?2:1;
-    if(S.jangs.length<mx&&ready('jang',dt,(6.5-.5*L)*s.cd)){ const f=S.face;
+    if(S.jangs.filter(J=>!J.sh).length<mx&&ready('jang',dt,(6.5-.5*L)*s.cd)){ const f=S.face;
       if(E.jang){ const px=-f.z,pz=f.x; S.jangs.push(mkJang(P.x+f.x*2+px*2.2,P.z+f.z*2+pz*2.2,L,s),mkJang(P.x+f.x*2-px*2.2,P.z+f.z*2-pz*2.2,L,s)); }
       else S.jangs.push(mkJang(P.x+f.x*2.4,P.z+f.z*2.4,L,s)); sfx.jang(); }
     for(let i=S.jangs.length-1;i>=0;i--){ const J=S.jangs[i]; J.t+=dt; if(J.t>J.life){ S.jangs.splice(i,1); fx(J.x,J.z,1.5,[.8,.5,.3],.3); continue; }
-      J.pt-=dt; if(J.pt<=0){ J.pt=.8; const R=(1.8+.15*L)*s.area; areaHit(J.x,J.z,R,(10+5*L)*s.might*(br('jang')==='a'?1.5:1),e=>{ if(F.sotdae&&!e.talis&&!e.d.treasure) e.talis={gen:0}; },2); fx(J.x,J.z,R,[1,.62,.22],.3); }
+      J.pt-=dt; if(J.pt<=0){ J.pt=.8; const R=(1.8+.15*L)*s.area; areaHit(J.x,J.z,R,(10+5*L)*s.might*(J.sh||1)*(br('jang')==='a'?1.5:1),e=>{ if(F.sotdae&&!e.talis&&!e.d.treasure) e.talis={gen:0}; },2); fx(J.x,J.z,R,[1,.62,.22],.3); }
       if(br('jang')==='b') near(J.x,J.z,J.R,e=>{ e.slow=Math.min(e.slow,.6); }); }
-    if(E.jang&&S.jangs.length===2){ S.jjT=(S.jjT||0)-dt; if(S.jjT<=0){ S.jjT=.3; const [a,b]=S.jangs; if(hitSeg(a.x,a.z,b.x,b.z,.4,e=>damage(e,(8+3*L)*s.might))) damageBoss((8+3*L)*s.might); } } }
+    if(E.jang&&S.jangs.filter(J=>!J.sh).length===2){ S.jjT=(S.jjT||0)-dt; if(S.jjT<=0){ S.jjT=.3; const [a,b]=S.jangs.filter(J=>!J.sh); if(hitSeg(a.x,a.z,b.x,b.z,.4,e=>damage(e,(8+3*L)*s.might))) damageBoss((8+3*L)*s.might); } } }
   // 방패연: 연과 연줄이 벤다
   s.might=M0*pm('kite');
   if(W.kite){ const L=W.kite, n=E.kite?3:br('kite')==='b'?2:1, R=(3.2+.3*L)*s.area*(E.kite?1.3:1);
@@ -2278,12 +2326,12 @@ function weapons2(dt,s,P){ const M0=s.might;
   // 팽이: 채찍으로 치면 다시 돈다
   s.might=M0*pm('top');
   if(W.top){ const L=W.top, mx=1+(L>=3?1:0)+(L>=5?1:0)+(E.top?1:0)+s.amount;
-    if(S.tops.length<mx&&ready('top',dt,(3-.2*L)*s.cd)){ const a=rr(0,6.28); S.tops.push({x:P.x,z:P.z,vx:Math.cos(a)*5,vz:Math.sin(a)*5,en:1,t:0}); sfx.whip(); }
+    if(S.tops.filter(q=>!q.sh).length<mx&&ready('top',dt,(3-.2*L)*s.cd)){ const a=rr(0,6.28); S.tops.push({x:P.x,z:P.z,vx:Math.cos(a)*5,vz:Math.sin(a)*5,en:1,t:0}); sfx.whip(); }
     for(let i=S.tops.length-1;i>=0;i--){ const q=S.tops[i]; q.t+=dt; if(!E.top) q.en-=dt/(5.5*s.dur); if(q.en<=0){ S.tops.splice(i,1); burst(q.x,.4,q.z,4); continue; }
       if(Math.hypot(P.x-q.x,P.z-q.z)<.85&&q.t>.6){ q.en=1; q.t=0; const a=Math.atan2(q.z-P.z,q.x-P.x); q.vx=Math.cos(a)*9; q.vz=Math.sin(a)*9; sfx.whip(); fx(q.x,q.z,.8,[1,.9,.5],.2); }
       const tg=nearest(q.x,q.z,6), sp=3+2.5*q.en; if(tg){ const dx=tg.x-q.x,dz=tg.z-q.z,l=Math.hypot(dx,dz)||1; q.vx+=(dx/l*sp-q.vx)*Math.min(1,dt*2.5); q.vz+=(dz/l*sp-q.vz)*Math.min(1,dt*2.5); }
       q.x+=q.vx*dt; q.z+=q.vz*dt; const dP=Math.hypot(q.x-P.x,q.z-P.z); if(dP>9){ q.vx+=(P.x-q.x)/dP*dt*12; q.vz+=(P.z-q.z)/dP*dt*12; }
-      const rad=F.whirl?1.1:.5, dmg=(8+4*L)*s.might*(.5+.5*q.en)*(br('top')==='a'?1.2:1);
+      const rad=F.whirl?1.1:.5, dmg=(8+4*L)*s.might*(q.sh||1)*(.5+.5*q.en)*(br('top')==='a'?1.2:1);
       if(F.whirl) near(q.x,q.z,2.4,e=>{ if(e.d.treasure) return; const dx=q.x-e.x,dz=q.z-e.z,l=Math.hypot(dx,dz)||1; e.x+=dx/l*dt*3; e.z+=dz/l*dt*3; });
       near(q.x,q.z,rad+.8,e=>{ if(Math.hypot(e.x-q.x,e.z-q.z)>rad+e.d.r) return; const last=e.hitCd.get(q)||0; if(S.t-last<.35) return; e.hitCd.set(q,S.t); const dx=e.x-q.x,dz=e.z-q.z,l=Math.hypot(dx,dz)||1; damage(e,dmg,dx/l,dz/l,br('top')==='a'?6:2); if(br('top')==='b') e.burn=Math.max(e.burn,1.5); });
       if(boss.alive&&Math.hypot(boss.x-q.x,boss.z-q.z)<rad+.9&&S.t-(q.bh||0)>.35){ q.bh=S.t; damageBoss(dmg); } } }
@@ -2345,18 +2393,20 @@ function laugh(L,s){ S.maskPop=.8; const P=player.root.position, R=(3+.3*L)*s.ar
 function drawSkills2(t){
   if(!S||!S.yuts||S.phase==='hub') { [yutB,totemB,postB,kiteB,topB,arrowB,ropeB,pepperB,waveB,rocketB,popMaskB,popFanB].forEach(b=>{ b.begin(); b.end(); }); return; }
   [yutB,totemB,postB,kiteB,topB,arrowB,ropeB,pepperB,waveB,rocketB,popMaskB,popFanB].forEach(b=>b.begin());
-  for(const y of S.yuts) yutB.push(y.x,y.y,y.z,1,1,1,1,1,y.rot);
+  for(const y of S.yuts) yutB.push(y.x,y.y,y.z,1,1,y.sh?.75:1,y.sh?.55:1,1,y.rot);
   for(const r of S.rockets) if(r.t>=0){ rocketB.push(r.x,r.y,r.z,1,1,1,.55,.2); }
-  for(const J of S.jangs){ const k=Math.min(1,J.t*4); totemB.push(J.x,0,J.z,1,k,1,1,1); }
+  for(const J of S.jangs){ const k=Math.min(1,J.t*4); totemB.push(J.x,0,J.z,1,k,J.sh?.7:1,J.sh?.5:1,1); }
   if(S.segs){ let c=0; for(const [a,b] of S.segs){ const L=Math.hypot(b.x-a.x,b.z-a.z), n=Math.max(1,Math.floor(L/.4)); for(let i=0;i<=n;i++){ const k=i/n, x=a.x+(b.x-a.x)*k, z=a.z+(b.z-a.z)*k, sag=.75-Math.sin(k*Math.PI)*.25;
       if(c++%4===2) pepperB.push(x,sag-.35,z,1,1,1,1,1); else ropeB.push(x,sag,z,1,1,1,1,1); } }
     for(const q of S.posts) postB.push(q.x,0,q.z,1,1,1,1,1); }
+  if(S.shSegs){ for(const [a,b] of S.shSegs){ const L=Math.hypot(b.x-a.x,b.z-a.z), n=Math.max(2,Math.ceil(L/.5)); for(let i=1;i<n;i++){ const f=i/n; ropeB.push(a.x+(b.x-a.x)*f,.75-Math.sin(f*Math.PI)*.15,a.z+(b.z-a.z)*f,.45,.45,.7,.5,1); } } for(const q of S.shPosts||[]) postB.push(q.x,0,q.z,1,1,.7,.5,1); }
   const P=player.root.position;
   if(S.maskPop>0){ const k=S.maskPop/.8, sc=.6+.6*(1-k)*(k>.5?1:1); popMaskB.push(P.x,2.5+.3*(1-k),P.z,sc,sc,1,1,1,Math.sin(t*20)*.08*k); }
   if(S.fanPop>0){ const f=S.face||{x:0,z:1}, k=S.fanPop/.45; popFanB.push(P.x+f.x*.9,1.2,P.z+f.z*.9,.7+.4*(1-k),.7+.4*(1-k),1,1,1,(f.x>0?-1:1)*.6*(1-k)); }
   for(const k of S.kites){ const y=2.4+Math.sin(t*3+k.x)*.2; kiteB.push(k.x,y,k.z,1,1,1,1,1,Math.sin(t*2)*.2); const n=10; for(let i=1;i<n;i++){ const f=i/n; ropeB.push(P.x+(k.x-P.x)*f,1+(y-1)*f-Math.sin(f*Math.PI)*.3,P.z+(k.z-P.z)*f,.45,.45,1,1,1); } }
-  for(const q of S.tops){ const w=Math.sin(t*40)*.15; topB.push(q.x,0,q.z,1+w,1,1,.9+.1*q.en,.9+.1*q.en); if(S.fu.whirl) waveB.push(q.x,.08,q.z,2.6,2.6,.5,.7,.9); }
-  for(const q of S.arrows) arrowB.push(q.x,.9,q.z,1,1,1,1,1,-q.a);
+  if(S.shKite){ const k=S.shKite, SP=shadowPos(), y=2.2+Math.sin(t*3+k.z)*.2; kiteB.push(k.x,y,k.z,.85,.85,.72,.5,1,Math.sin(t*2)*.2); for(let i=1;i<10;i++){ const f=i/10; ropeB.push(SP.x+(k.x-SP.x)*f,1+(y-1)*f-Math.sin(f*Math.PI)*.3,SP.z+(k.z-SP.z)*f,.45,.45,.7,.5,1); } }
+  for(const q of S.tops){ const w=Math.sin(t*40)*.15; topB.push(q.x,0,q.z,1+w,1,q.sh?.72:1,q.sh?.5:.9+.1*q.en,q.sh?1:.9+.1*q.en); if(S.fu.whirl) waveB.push(q.x,.08,q.z,2.6,2.6,.5,.7,.9); }
+  for(const q of S.arrows) arrowB.push(q.x,.9,q.z,1,1,q.sh?.72:1,q.sh?.5:1,1,-q.a);
   for(const w of S.waves){ const a=1-w.r/w.max; waveB.push(w.x,.1,w.z,w.r*2.2,w.r*2.2,.3*a+.1,.7*a+.1,a); }
   [yutB,totemB,postB,kiteB,topB,arrowB,ropeB,pepperB,waveB,rocketB,popMaskB,popFanB].forEach(b=>b.end());
 }
@@ -2515,7 +2565,7 @@ function lootTick(dt,P){ if(!WORLD) return; S.spotT=(S.spotT??5)-dt;
     const d=Math.hypot(P.x-o.x,P.z-o.z);
     if(d<1.2){ o.t+=dt; if(Math.random()<dt*8) burst(o.x,.4,o.z,1); } else o.t=Math.max(0,o.t-dt*.5);
     const need=o.ember?.4:o.boss?.8:1.2; if(Math.abs(o.t-(o.lt||0))>.03){ o.lt=o.t; o.prog.geometry.dispose(); o.prog.geometry=new THREE.RingGeometry(1.2,1.42,40,1,0,Math.max(.01,o.t/need*6.283)); }
-    if(o.t>=need){ if(o.ember){ o.g.parent.remove(o.g); SPOTS.splice(i,1); const gr=o.gr??rollGrade([0,0,75,25]); (S.emG||(S.emG=[])).push({id:o.did||'',g:gr,t:performance.now()}); S.ember=S.emG.length; if(o.did){ MPF.pk.push(o.did); MPF.drops.delete(o.did); if(o.did.includes('d')&&!o.did.includes('d'+MPF.tag)) S.stole=(S.stole||0)+1; } sfx.lvl(); buzz(40); DBG.shake=.2; toast(`🔥 불씨 덩어리 <span style="color:${GRADE[gr].c}">(${GRADE[gr].n})</span>`,MP.room?'이제 모두가 나를 쫓는다 · 모닥불에 닿아야 장비가 된다':'🔥 모닥불(안전지대) 빛 안에 닿으면 장비가 된다 · 쓰러지면 흘린다'); lootHud(); continue; }
+    if(o.t>=need){ if(o.ember){ o.g.parent.remove(o.g); SPOTS.splice(i,1); const gr=o.gr??rollGrade([0,0,75,25]); (S.emG||(S.emG=[])).push({id:o.did||'',g:gr,t:performance.now()}); S.ember=S.emG.length; if(o.did){ MPF.pk.push(o.did); MPF.drops.delete(o.did); if(o.did.includes('d')&&!o.did.includes('d'+MPF.tag)){ S.stole=(S.stole||0)+1; if(o.dpty) S.stoleP=(S.stoleP||0)+1; } } sfx.lvl(); buzz(40); DBG.shake=.2; toast(`🔥 불씨 덩어리 <span style="color:${GRADE[gr].c}">(${GRADE[gr].n})</span>`,MP.room?'이제 모두가 나를 쫓는다 · 모닥불에 닿아야 장비가 된다':'🔥 모닥불(안전지대) 빛 안에 닿으면 장비가 된다 · 쓰러지면 흘린다'); lootHud(); continue; }
       const kd=o.shop?shopLoot(o.shop.c):o.boss?'gear':['sil','garu','soe','mat'][Math.floor(Math.random()*4)];
       if(kd!=='gear'){ o.g.parent.remove(o.g); SPOTS.splice(i,1); sfx.lvl(); buzz(30); const x2=o.boss?2:1;
         if(kd==='heal'){ S.hp=Math.min(S.maxhp,S.hp+S.maxhp*.35); toast('💊 '+o.shop.name,'약국을 뒤졌다 · 체력을 되찾았다'); }
@@ -2771,7 +2821,7 @@ setTimeout(()=>{ dnInit(); const b=document.getElementById('bSp'); if(b) b.addEv
 /* ============ 피해·처치 ============ */
 function damage(e,n,kx=0,kz=0,kb=0){
   if(e.dead||S.inSafe) return; if(e.freeze>0) n*=1.5; if(e.mark&&S.br.barcode==='a') n*=1.3; if(e.fear>0&&S.br.mask==='a') n*=1.4;
-  e.hp-=n; e.flash=.12; sfx.hit();
+  e.hp-=n; e.flash=.12; sfx.hit(); if(DBG.dealt!=null){ DBG.dealt+=n; if(DBG.shOn) DBG.shDealt=(DBG.shDealt||0)+n; }
   e.dnA=(e.dnA||0)+n; if(e.hp<=0||S.t-(e.dnT??-9)>.32){ e.dnT=S.t; const v=Math.round(e.dnA); e.dnA=0; if(v>=1){ S.dnMax=Math.max(v,(S.dnMax||0)*.995); const big=v>=S.dnMax*.7, mid=v>=S.dnMax*.35; if(big||(mid&&Math.random()<.5)||Math.random()<.18) dnum(e.x,e.d.h*.95,e.z,v,big?'big':mid?'mid':''); } }
   if(kb){ const r=1-(e.d.kbRes||0); e.kx+=kx*kb*r*1.35; e.kz+=kz*kb*r*1.35; }
   if(e.hp<=0){ e.dead=true; kill(e); }
@@ -2892,19 +2942,19 @@ function weapons(dt){
     near(P.x,P.z,lR,e=>{ if(Math.hypot(e.x-P.x,e.z-P.z)<lR+e.d.r*.5) e.slow=Math.min(e.slow,slow); });
     if(ready('lantern',dt,.5)){ const dmg=(4+3*W.lantern+(W.lantern>=5?4:0))*s.might*(E.lantern?1.7:1); evoEv('lantern',P.x,P.z,lR);
       near(P.x,P.z,lR,e=>{ if(Math.hypot(e.x-P.x,e.z-P.z)<lR+e.d.r*.5){ damage(e,dmg); if(br('lantern')==='b'&&Math.random()<.08) e.freeze=Math.max(e.freeze,.8); } });
-      if(sm) near(SP.x,SP.z,lR*.7,e=>{ if(Math.hypot(e.x-SP.x,e.z-SP.z)<lR*.7+e.d.r*.5) damage(e,dmg*sm); });
+      if(sm){ near(SP.x,SP.z,lR*.7,e=>{ if(Math.hypot(e.x-SP.x,e.z-SP.z)<lR*.7+e.d.r*.5) damage(e,dmg*sm); }); S.shFl=Math.max(S.shFl||0,.12); }
       if(boss.alive&&Math.hypot(boss.x-P.x,boss.z-P.z)<lR+.8) damageBoss(dmg); } }
   if(br('shadow')==='b'&&shadowP.root.visible) near(SP.x,SP.z,1.8,e=>{ e.slow=Math.min(e.slow,.55); });
   // 혼불
   s.might=M0*pm('orb');
-  if(W.orb&&ready('orb',dt,(E.orb?.9:1.35-.1*W.orb)*s.cd)){ fireOrb(P.x,P.z,1,s); if(sm) fireOrb(SP.x,SP.z,sm,s); }
+  if(W.orb&&ready('orb',dt,(E.orb?.9:1.35-.1*W.orb)*s.cd)){ fireOrb(P.x,P.z,1,s); if(sm){ fireOrb(SP.x,SP.z,sm,s); S.shFl=.3; } }
   // 팥 튕기기
   s.might=M0*pm('beans');
-  if(W.beans&&ready('beans',dt,(1.6-.1*W.beans)*s.cd)){ fireBeans(P.x,P.z,1,s); if(sm) fireBeans(SP.x,SP.z,sm,s); }
+  if(W.beans&&ready('beans',dt,(1.6-.1*W.beans)*s.cd)){ fireBeans(P.x,P.z,1,s); if(sm){ fireBeans(SP.x,SP.z,sm,s); S.shFl=.3; } }
   if(W.beans&&br('beans')==='b'&&ready('beanRain',dt,3)){ const cand=[]; near(P.x,P.z,9,e=>{ if(!e.d.treasure) cand.push(e); }); for(let i=0;i<6&&cand.length;i++){ const e=cand.splice(Math.floor(Math.random()*cand.length),1)[0]; areaHit(e.x,e.z,.7,(8+4*W.beans)*s.might); fx(e.x,e.z,.7,[1,.65,.25],.2); } sfx.bean(); }
   // 경적
   s.might=M0*pm('horn');
-  if(W.horn&&ready('horn',dt,(2.6-.2*W.horn)*s.cd*(W.horn>=3?.85:1))){ fireHorn(P.x,P.z,1,s); if(sm) fireHorn(SP.x,SP.z,sm,s); if(br('horn')==='b') S.hornAgain=.28; }
+  if(W.horn&&ready('horn',dt,(2.6-.2*W.horn)*s.cd*(W.horn>=3?.85:1))){ fireHorn(P.x,P.z,1,s); if(sm){ fireHorn(SP.x,SP.z,sm,s); S.shFl=.3; } if(br('horn')==='b') S.hornAgain=.28; }
   if(S.hornAgain>0){ S.hornAgain-=dt; if(S.hornAgain<=0) fireHorn(P.x,P.z,.8,s); }
   // 바코드 빛
   s.might=M0*pm('barcode');
@@ -2932,7 +2982,7 @@ function weapons(dt){
       if(E.salt&&S.loopCd<=0) checkSaltLoop(s); }
     S.saltTick=(S.saltTick||0)-dt; const tick=S.saltTick<=0; if(tick) S.saltTick=.3;
     for(let i=salts.length-1;i>=0;i--){ const q=salts[i]; q.t+=dt; if(q.t>q.life){ salts.splice(i,1); continue; }
-      near(q.x,q.z,q.r+.4,e=>{ if(Math.hypot(e.x-q.x,e.z-q.z)<q.r+e.d.r*.5){ e.slow=Math.min(e.slow,.45); if(tick&&!e.saltHit){ e.saltHit=true; damage(e,dmg); } } }); }
+      near(q.x,q.z,q.r+.4,e=>{ if(Math.hypot(e.x-q.x,e.z-q.z)<q.r+e.d.r*.5){ e.slow=Math.min(e.slow,.45); if(tick&&!e.saltHit){ e.saltHit=true; damage(e,dmg*(q.m||1)); } } }); }
     if(tick&&boss.alive&&salts.some(q=>Math.hypot(boss.x-q.x,boss.z-q.z)<q.r+1.1)) damageBoss(dmg*3);
     if(tick) for(const e of enemies) e.saltHit=false;
     S.loopCd-=dt; }
@@ -2986,7 +3036,7 @@ function weapons(dt){
       if(nx){ const l=Math.sqrt(nd)||1; b.vx=(nx.x-b.x)/l*11; b.vz=(nx.z-b.z)/l*11; } else { const a=rr(0,6.28); b.vx=Math.cos(a)*10; b.vz=Math.sin(a)*10; } b.life=Math.max(b.life,1); }
     if(b.life<=0) beans.splice(i,1); }
   for(let i=puddles.length-1;i>=0;i--){ const q=puddles[i]; q.t+=dt; if(q.t>q.life){ puddles.splice(i,1); continue; } q.tick=(q.tick||0)-dt; if(q.tick<=0){ q.tick=.3; near(q.x,q.z,.9,e=>{ if(Math.hypot(e.x-q.x,e.z-q.z)<.8) damage(e,q.dmg*.3); }); } }
-  weapons2(dt,s,P); fusions2(dt,s,P);
+  weapons2(dt,s,P); shadowWeapons(dt,s,P); fusions2(dt,s,P);
   // 쓰러진 깨어난 자가 돕는다 (선택 C3)
   if(S.ally>0&&boss.alive&&!boss.dying){ S.ally-=dt; if(ready('ally',dt,.7)){ const a=Math.atan2(boss.z-P.z,boss.x-P.x); orbs.push({x:P.x-1,z:P.z-1,y:1.2,vx:Math.cos(a)*8,vz:Math.sin(a)*8,tgt:boss,life:2.5,pierce:1,dmg:40,hit:new Set()}); } }
 }
@@ -3234,7 +3284,8 @@ function update(dt){
   lanternL.l.position.set(P.x+(player.view==='side'?(player.flip?-.3:.3):player.view==='front'?.35:-.35),.95,P.z+.1);
   // 그림자 분신: 뒤에서 따라온다
   if(S.W.shadow){ const SP=shadowP.root.position, tx=P.x-S.face.x*1.3+S.face.z*.6, tz=P.z-S.face.z*1.3-S.face.x*.6; SP.x+=(tx-SP.x)*Math.min(1,dt*4); SP.z+=(tz-SP.z)*Math.min(1,dt*4);
-    shadowP.moving=player.moving; shadowP.look(S.face.x,S.face.z); shadowP.update(dt,Math.min(1,il)); }
+    shadowP.moving=player.moving; shadowP.look(S.face.x,S.face.z); shadowP.update(dt,Math.min(1,il));
+    S.shFl=Math.max(0,(S.shFl||0)-dt); const fk=Math.min(1,S.shFl/.3); shadowP.mat.color.setRGB(.06+.5*fk,.04+.3*fk,.1+.75*fk); }
   // 모닥불 쉼터
   const fd=Math.hypot(P.x,P.z); if(fd<2.3&&S.hp<S.maxhp){ S.hp=Math.min(S.maxhp,S.hp+4*dt*(S.char==='gosi'?.5:1)); if(Math.random()<dt*3) sfx.heal(); }
   // 쓰러진 깨어난 자에게 다가가면
@@ -3318,16 +3369,16 @@ function evoMoment(k,two){ if(two) return evoMoment2(k); const P=player.root.pos
 const TIE_R=16;
 function tieFx(t,P){ if(!FIELD||!S||!S.field||!MP.ghosts.size) { MP.ties=null; return; }
   const holdMe=S.emG&&S.emG.length; if(S.fLoot>0||S.doom||holdMe){ MP.ties=null; return; }
-  const L=[]; for(const G of MP.ghosts.values()){ if(G.hold) continue; const q=G.g.position, d=Math.hypot(q.x-P.x,q.z-P.z); if(d>TIE_R||d<.6) continue; L.push([q.x,q.z,d]); }
+  const L=[]; for(const G of MP.ghosts.values()){ if(G.hold||!G.pty) continue; const q=G.g.position, d=Math.hypot(q.x-P.x,q.z-P.z); if(d>TIE_R||d<.6) continue; L.push([q.x,q.z,d]); }
   MP.ties=L.length?L:null; if(!L.length) return; MP.tieT=performance.now();
   const fight=boss.alive&&!boss.dying, bx=boss.x, bz=boss.z;
   for(const [x,z,d] of L){ const both=fight&&Math.hypot(P.x-bx,P.z-bz)<14&&Math.hypot(x-bx,z-bz)<14; const fa=Math.max(.25,1-d/TIE_R);
-    const k=.55+.45*fa, c=both?[.75,1,1.25]:[.32*k,.72*k,1*k];
-    epLine(P.x,P.z,x,z,.9,both?.4:.5,both?.62:.5,c,.15+.1*Math.sin(t*2),t);
-    if(both&&Math.random()<.3){ const k=Math.random(); ep(P.x+(x-P.x)*k,.9,P.z+(z-P.z)*k,0,rr(.4,1),0,.4,.3,CYAN); } } }
-function tieCut(){ const P=player.root.position; const L=MP.ties||[]; MP.ties=null;
-  for(const [x,z] of L){ for(let i=0;i<=14;i++){ const k=i/14; ep(P.x+(x-P.x)*k,.9,P.z+(z-P.z)*k,rr(-1,1),rr(.5,2),rr(-1,1),rr(.7,1.2),.4,i%2?BLUE:WHITE,5); }
-    const mx=(P.x+x)/2, mz=(P.z+z)/2; epBurst(mx,.9,mz,18,4,.5,.45,WHITE,2); er(mx,mz,.2,2.2,.4,BLUE,1.2); }
+    // v2.31 (기획자 05:43 ㄱ): 기술과 헷갈리지 않게 — 파티원끼리만 · 땅 위 초록 점선 · 빛알 없음(같은 보스 곁이면 조금 밝게)
+    const k=(both?.85:.5)*(.55+.45*fa), c=[.48*k,.89*k,.54*k], n=Math.min(30,Math.ceil(d/.45)), sh=Math.floor(t*2.5);
+    for(let i=1;i<n;i++){ if((i+sh)%2) continue; const f=i/n; gp(P.x+(x-P.x)*f,.06,P.z+(z-P.z)*f,.32*FXS,.32*FXS,c[0],c[1],c[2]); } } }
+function tieCut(){ const P=player.root.position; const L=MP.ties||[]; MP.ties=null; const GRN=[.48,.89,.54];
+  for(const [x,z] of L){ for(let i=0;i<=14;i++){ const k=i/14; ep(P.x+(x-P.x)*k,.15,P.z+(z-P.z)*k,rr(-1,1),rr(.5,2),rr(-1,1),rr(.7,1.2),.4,i%2?GRN:WHITE,5); }
+    const mx=(P.x+x)/2, mz=(P.z+z)/2; epBurst(mx,.3,mz,18,4,.5,.45,WHITE,2); er(mx,mz,.2,2.2,.4,GRN,1.2); }
   try{ sfx.jing(); }catch(e){} DBG.tieCut=(DBG.tieCut||0)+1; }
 // v2.27 2차 각성 순간: 더 길게 멈춤 · 하얀·보라 섬광 · 빛기둥 · 고리 다섯 · 늦게 오는 두 번째 파동
 function evoMoment2(k){ const P=player.root.position, E=EVOS[k]; HS=Math.max(HS,.75); DBG.shake=Math.max(DBG.shake||0,1.5); buzz([90,60,160]);
@@ -3558,8 +3609,12 @@ function arrows(){
   else arrow($('arFire'),0,0,play&&S.hp<S.maxhp*.4&&Math.hypot(P.x,P.z)>5,gi('u_fire')+'모닥불');
   { let sp=null,sd=1e9; if(play) for(const o of SPOTS){ const d=Math.hypot(o.x-P.x,o.z-P.z); if(d<sd){sd=d;sp=o;} } arrow($('arLoot'),sp?.x,sp?.z,play&&!!sp,sp&&sp.ember?gi('u_ember')+'불씨 덩어리':sp&&sp.boss?gi('u_shut')+'셔터':gi('u_spark')+'물건'); }
   arrow($('arNpc'),S?.npc?.x,S?.npc?.z,play&&S.npc&&!S.npcDone,gi('u_npc')+'누군가');
+  // v2.31 친구 위치(기획자 05:30 「친구 위치가 표시가 안 되더라」): 같은 필드의 파티원(없으면 가장 가까운 사람)이 화면 밖이면 가장자리 초록 화살표
+  { let a=$('arPal'); if(!a&&$('arHold')){ a=$('arHold').cloneNode(true); a.id='arPal'; a.style.color='#7be38a'; document.body.appendChild(a); }
+    let F=null, fd=1e9; if(a&&play&&MP.ghosts) for(const G of MP.ghosts.values()){ const q=G.g.position, d=Math.hypot(q.x-P.x,q.z-P.z)-(G.pty?1e4:0); if(d<fd){ fd=d; F={x:q.x,z:q.z,nm:(G.pty?'🤝':'👥')+(G.nm||'')}; } }
+    if(a) arrow(a,F?.x,F?.z,!!F,F?F.nm:''); }
   // v2.19 점검: 화살표 이름표가 겹치면(같은 쪽 가장자리) 뒤의 것을 가장자리를 따라 비켜 놓는다
-  const L=['arBoss','arHold','arFire','arTre','arLoot','arNpc'].map(k=>$(k)).filter(e=>e&&e._on);
+  const L=['arPal','arBoss','arHold','arFire','arTre','arLoot','arNpc'].map(k=>$(k)).filter(e=>e&&e._on);
   for(let i=1;i<L.length;i++){ const e=L[i]; let moved=false; for(let k=0;k<5;k++){ const hit=L.slice(0,i).some(o=>Math.abs(o._sx-e._sx)<92&&Math.abs(o._sy-e._sy)<60); if(!hit) break; moved=true;
       const side=e._sx<70||e._sx>innerWidth-70; if(side) e._sy+=64*(e._sy>innerHeight*.5?-1:1); else e._sx+=100*(e._sx>innerWidth*.5?-1:1); }
     if(moved) e.style.transform=`translate(${e._sx}px,${e._sy}px)`; }
@@ -4018,21 +4073,24 @@ const PTY={id:'',inv:null,ans:{},no:null,ask:null,near:false};
 try{ const o=JSON.parse(localStorage.getItem('janya_pt')||'null'); if(o&&typeof o.id==='string'&&Date.now()-(+o.t||0)<3*3600e3) PTY.id=o.id.replace(/[^a-z0-9]/gi,'').slice(0,10); }catch(e){}
 function ptSave(){ try{ localStorage.setItem('janya_pt',JSON.stringify({id:PTY.id,t:Date.now()})); }catch(e){} }
 const ptOf=p=>p&&p.presence&&typeof p.presence.pt==='string'?p.presence.pt:'';
-const isParty=p=>!!(PTY.id&&ptOf(p)===PTY.id);
+const ptRaw=p=>!!(PTY.id&&ptOf(p)===PTY.id);
+// v2.31 (기획자 11-17 05:35 ㄱ): 파이널이 쓰러지면 파티는 잠시 풀린다 — 불씨는 하나. 판이 끝나면 다시 한 파티
+const ptBroke=()=>!!(S&&S.ptBroke&&S.phase==='play');
+const isParty=p=>ptRaw(p)&&!ptBroke();
 function ptMembers(){ return PTY.id?mpPeers().filter(isParty):[]; }
 const rid=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(b=>'abcdefghijklmnopqrstuvwxyz0123456789'[b%36]).join('');
 function ptInvite(peer){ const p=mpPeers().find(q=>q.peer===peer); if(!p) return toast('그 사람이 지금 안 보인다'); cardClose();
   if(isParty(p)) return toast(`🤝 ${mpName(p)}와 이미 한 파티`); if(PTY.id&&ptMembers().length>=3) return toast('파티가 꽉 찼다','4명까지');
-  PTY.inv={to:p.peer,pt:PTY.id||rid(8),t:Date.now()}; toast(`🤝 ${mpName(p)}에게 파티를 청했다`,'상대가 「맺기」를 누르면 한 파티'); if(MP.lastKey) MP.lastKey=''; }
+  PTY.inv={to:p.peer,pt:PTY.id||rid(8),t:Date.now()}; toast(`🤝 ${mpName(p)}에게 파티를 청했다`,'상대가 「맺기」를 누르면 한 파티 · ⚠ 파이널을 잡으면 풀린다'); if(MP.lastKey) MP.lastKey=''; }
 function ptLeave(){ if(!PTY.id) return; PTY.id=''; ptSave(); toast('파티에서 나왔다'); pplRefresh(); }
-function ptPresence(st){ st.pt=PTY.id||null; st.pi=PTY.inv?[PTY.inv.to,PTY.inv.pt,Math.floor(PTY.inv.t/1000)%1e6]:null; st.pn=PTY.no?[PTY.no.to,PTY.no.pt]:null; return st; }
+function ptPresence(st){ st.pt=PTY.id||null; st.pv=PV.on?1:0; st.pi=PTY.inv?[PTY.inv.to,PTY.inv.pt,Math.floor(PTY.inv.t/1000)%1e6]:null; st.pn=PTY.no?[PTY.no.to,PTY.no.pt]:null; return st; }
 // 작은 물음 상자(파티 청함·전화 옴) — 게임은 멈추지 않는다
 function askBox(id,html,btns,ms){ let d=$(id); if(d) d.remove(); d=document.createElement('div'); d.id=id; d.className='askB'; d.innerHTML=html+'<div class="askR"></div>'; const R=d.querySelector('.askR');
   for(const [t,cls,fn] of btns){ const b=document.createElement('div'); b.className='btn '+cls; b.textContent=t; b.onpointerdown=e=>{ e.preventDefault(); e.stopPropagation(); d.remove(); clearTimeout(d._t); fn(); }; R.appendChild(b); }
   document.body.appendChild(d); if(ms) d._t=setTimeout(()=>{ if(d.isConnected){ d.remove(); const last=btns[btns.length-1]; if(last&&last[3]) last[3](); } },ms); return d; }
 function ptAsk(p,pt){ const nm=mpName(p); PTY.ask=pt; if(navigator.vibrate) try{ navigator.vibrate([60,40,60]); }catch(e){}
-  askBox('ptAskB',`<b>🤝 ${nm}가 파티를 맺자고 한다</b><small>파티원끼리는 서로 덮치지 않고 · 곁에 있으면 경험 +${Math.round(TU('ptxp')*100)}%</small>`,
-    [['맺기','big',()=>{ PTY.ask=null; PTY.id=pt; PTY.inv=null; ptSave(); toast(`🤝 ${nm}와 파티를 맺었다`,'서로 덮치지 않는다'); pplRefresh(); }],
+  askBox('ptAskB',`<b>🤝 ${nm}가 파티를 맺자고 한다</b><small>파티원끼리는 서로 덮치지 않고 · 곁에 있으면 경험 +${Math.round(TU('ptxp')*100)}%<br>⚠ 파이널을 잡으면 파티가 풀린다 · 불씨는 하나</small>`,
+    [['맺기','big',()=>{ PTY.ask=null; PTY.id=pt; PTY.inv=null; ptSave(); toast(`🤝 ${nm}와 파티를 맺었다`,'서로 덮치지 않는다 · ⚠ 파이널을 잡으면 풀린다 — 불씨는 하나'); pplRefresh(); }],
      ['아니','',()=>{ PTY.ask=null; PTY.no={to:p.peer,pt,t:Date.now()}; },()=>{ PTY.ask=null; }]],30000); }
 function ptTick(){ if(!MP.room&&!DBG.fakePeers) return; const now=Date.now(), ps=mpPeers();
   const I=PTY.inv; if(I){ const q=ps.find(p=>p.peer===I.to);
@@ -4049,7 +4107,7 @@ const canCall=()=>!!(MP.room&&MP.room.ext&&MP.room.sig&&window.RTCPeerConnection
 const ICE_CFG={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]};
 const callSig=(k,o={})=>{ if(MP.room&&MP.room.sig&&CALL.peer) MP.room.sig(CALL.peer,{k,id:CALL.id,...o}); };
 async function callMic(){ try{ return await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false}); }catch(e){ toast('🎤 마이크를 쓸 수 없다','브라우저에서 마이크를 허락해야 통화가 된다'); return null; } }
-async function callStart(peer){ cardClose(); if(!canCall()) return toast('📞 전화는 GitHub 판에서만 된다','vera-architect.github.io/janya-play'); if(CALL.st) return toast('이미 통화 중이다');
+async function callStart(peer){ cardClose(); if(!canCall()) return toast('📞 전화는 GitHub 판에서만 된다','vera-architect.github.io/janya-play'); if(CALL.st) return toast('이미 통화 중이다'); if(PV.on) return toast('🎙 파티 음성 중이다','파티원과는 이미 이야기하는 중 · ✕로 나와서 걸기');
   const p=mpPeers().find(q=>q.peer===peer); if(!p) return toast('그 사람이 지금 안 보인다');
   CALL.st='mic'; const ms=await callMic(); if(!ms){ CALL.st=''; return; } if(CALL.st!=='mic'){ ms.getTracks().forEach(t=>t.stop()); return; }
   Object.assign(CALL,{st:'out',out:1,peer,nm:mpName(p),id:rid(6),ms,q:[],mute:false,gone:0,t0:0,last:null}); callSig('ring',{nm:MP.myNm||''}); callUI();
@@ -4085,7 +4143,7 @@ function callBeepEnd(){ try{ const c=SND.ctx; if(c){ const t=c.currentTime; for(
 async function callAccept(){ callRing(false); CALL.st='mic'; const ms=await callMic(); if(!ms){ callSig('rej'); Object.assign(CALL,{st:'',peer:'',id:''}); callUI(); return; }
   if(CALL.st!=='mic'){ ms.getTracks().forEach(t=>t.stop()); return; } CALL.ms=ms; CALL.st='conn'; callSig('acc'); callUI();
   clearTimeout(CALL.ringT); CALL.ringT=setTimeout(()=>{ if(CALL.st==='conn') callEnd('📞 연결이 안 됐다','와이파이에서 다시 해 보기'); },25000); }
-async function callOnSig(o){ const k=o.k; if(DBG.clog) console.log('call sig '+k+' st='+CALL.st+' id='+o.id+'/'+CALL.id+' f='+o.f+'/'+CALL.peer);
+async function callOnSig(o){ const k=o.k; if(k==='pv') return pvOnSig(o); if(DBG.clog) console.log('call sig '+k+' st='+CALL.st+' id='+o.id+'/'+CALL.id+' f='+o.f+'/'+CALL.peer);
   if(k==='ring'){ if(CALL.st){ if(MP.room) MP.room.sig(o.f,{k:'busy',id:o.id}); return; }
     const p=mpPeers().find(q=>q.peer===o.f); const nm=p?mpName(p):(typeof o.nm==='string'?o.nm.replace(/[<>&"']/g,'').slice(0,10):'')||'누군가';
     Object.assign(CALL,{st:'in',out:0,peer:o.f,nm,id:String(o.id||'').slice(0,8),q:[],mute:false,gone:0,t0:0,last:null}); callRing(true); callUI();
@@ -4113,6 +4171,39 @@ function callUI(){ const b=$('callBar'); if(!b) return; const st=CALL.st, L=CALL
 setInterval(()=>{ if(!CALL.st){ if(CALL.last){ callUI(); if(performance.now()>CALL.last.until) CALL.last=null; } return; } callUI(); if(CALL.st==='in'||CALL.st==='mic') return; const here=mpPeers().some(q=>q.peer===CALL.peer); CALL.gone=here?0:CALL.gone+1;
   const lim=CALL.st==='on'||CALL.st==='re'?30:9; if(CALL.gone>=lim) callEnd(`📞 ${CALL.nm} 연결이 끊겼다`,'상대 쪽 신호가 끊겼다 · 📞 다시 걸기',true,'net','상대 신호 끊김'); },1000);
 addEventListener('pagehide',()=>{ if(CALL.st) callSig('bye',{r:'leave'}); });
+/* ============ v2.31 파티 음성방 (기획자 11-17 05:30 「파티가 동시통화가 가능해야겠네」) ============
+   파티원끼리 최대 4명이 한꺼번에 말한다. 각자 「🎙 파티 음성」을 켜면 켠 사람끼리 서로 이어진다(그물 연결, 셋까지).
+   신호는 1:1 전화와 같은 길(c/<id>)에 k:'pv'. 이름이 앞선 쪽이 먼저 건다. 쟁탈로 파티가 잠시 풀려도 음성은 이어진다. */
+const PV={on:false,ms:null,pcs:new Map(),mute:false,q:new Map()};
+const pvSig=(to,o)=>{ if(MP.room&&MP.room.sig) MP.room.sig(to,{k:'pv',...o}); };
+function pvMates(){ return mpPeers().filter(p=>ptRaw(p)&&p.presence&&p.presence.pv===1); }
+function pvAu(peer){ const id='pvAu_'+peer.replace(/[^a-z0-9]/gi,''); let a=$(id); if(!a){ a=document.createElement('audio'); a.id=id; a.autoplay=true; a.setAttribute('playsinline',''); document.body.appendChild(a); } return a; }
+function pvPc(peer){ const pc=new RTCPeerConnection(ICE_CFG); pc._t0=Date.now(); PV.pcs.set(peer,pc); for(const t of PV.ms.getTracks()) pc.addTrack(t,PV.ms);
+  pc.onicecandidate=e=>{ if(e.candidate) pvSig(peer,{t:'ice',c:e.candidate.toJSON()}); };
+  pc.ontrack=e=>{ const au=pvAu(peer); au.srcObject=e.streams[0]||new MediaStream([e.track]); const pl=au.play(); if(pl&&pl.catch) pl.catch(()=>{ PV.needTap=1; pvUI(); }); };
+  pc.onconnectionstatechange=()=>{ const s=pc.connectionState; if(s==='connected'){ const p=mpPeers().find(q=>q.peer===peer); toast(`🎙 ${p?mpName(p):'파티원'}와 음성이 이어졌다`); } if(s==='failed'){ pvDrop(peer); } pvUI(); };
+  return pc; }
+function pvDrop(peer){ const pc=PV.pcs.get(peer); if(pc){ try{ pc.close(); }catch(e){} PV.pcs.delete(peer); } PV.q.delete(peer); const a=$('pvAu_'+peer.replace(/[^a-z0-9]/gi,'')); if(a){ a.srcObject=null; a.remove(); } }
+async function pvJoin(){ if(!canCall()) return toast('🎙 파티 음성은 GitHub 판에서만 된다'); if(!PTY.id) return toast('먼저 파티를 맺어야 한다'); if(CALL.st) return toast('1:1 통화를 끊고 들어오기'); if(PV.on) return;
+  const ms=await callMic(); if(!ms) return; PV.ms=ms; PV.on=true; PV.mute=false; callDuck(true); toast('🎙 파티 음성에 들어왔다','음성을 켠 파티원끼리 이어진다 · 4명까지'); if(MP.lastKey) MP.lastKey=''; pvUI(); pplRefresh(); }
+function pvLeave(why){ if(!PV.on) return; for(const peer of [...PV.pcs.keys()]){ pvSig(peer,{t:'bye'}); pvDrop(peer); } try{ PV.ms.getTracks().forEach(t=>t.stop()); }catch(e){} PV.ms=null; PV.on=false; callDuck(!!CALL.st&&CALL.st==='on'); if(why) toast(why); if(MP.lastKey) MP.lastKey=''; pvUI(); pplRefresh(); }
+function pvMute(){ if(!PV.ms) return; PV.mute=!PV.mute; PV.ms.getAudioTracks().forEach(t=>t.enabled=!PV.mute); pvUI(); }
+async function pvTick(){ if(!PV.on) return; if(!PTY.id) return pvLeave('🎙 파티가 없어 음성에서 나왔다'); const M=pvMates(), ids=new Set(M.map(p=>p.peer));
+  for(const [peer,pc] of [...PV.pcs]) if(!ids.has(peer)||(pc.connectionState!=='connected'&&Date.now()-pc._t0>12000)) pvDrop(peer);
+  for(const p of M.slice(0,3)){ if(PV.pcs.has(p.peer)||!MP.me||MP.me>p.peer) continue; const pc=pvPc(p.peer); try{ const of=await pc.createOffer(); await pc.setLocalDescription(of); pvSig(p.peer,{t:'sdp',d:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}}); }catch(e){ pvDrop(p.peer); } }
+  pvUI(); }
+async function pvOnSig(o){ const peer=o.f; if(!peer) return; if(o.t==='bye'){ pvDrop(peer); pvUI(); return; } if(!PV.on) return; const p=mpPeers().find(q=>q.peer===peer); if(!p||!ptRaw(p)) return;
+  if(o.t==='sdp'&&o.d&&typeof o.d.sdp==='string'){ try{ if(o.d.type==='offer'){ if(PV.pcs.has(peer)) pvDrop(peer); if(PV.pcs.size>=3) return; const pc=pvPc(peer); await pc.setRemoteDescription(o.d); await pvFlush(peer); const an=await pc.createAnswer(); await pc.setLocalDescription(an); pvSig(peer,{t:'sdp',d:{type:pc.localDescription.type,sdp:pc.localDescription.sdp}}); }
+      else if(o.d.type==='answer'){ const pc=PV.pcs.get(peer); if(pc){ await pc.setRemoteDescription(o.d); await pvFlush(peer); } } }catch(e){ console.warn('pv sdp',e); pvDrop(peer); } return; }
+  if(o.t==='ice'&&o.c){ const pc=PV.pcs.get(peer); if(pc&&pc.remoteDescription){ try{ await pc.addIceCandidate(o.c); }catch(e){} } else { const q=PV.q.get(peer)||[]; if(q.length<60) q.push(o.c); PV.q.set(peer,q); } } }
+async function pvFlush(peer){ const pc=PV.pcs.get(peer), q=PV.q.get(peer)||[]; PV.q.delete(peer); for(const c of q){ try{ await pc.addIceCandidate(c); }catch(e){} } }
+function pvUI(){ let b=$('pvBar'); if(!b){ b=document.createElement('div'); b.id='pvBar'; b.innerHTML='<span id="pvN"></span><span id="pvM">🎤</span><span id="pvX">✕</span>'; document.body.appendChild(b);
+    const on=(id,fn)=>$(id).addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); fn(); }); on('pvM',pvMute); on('pvX',()=>pvLeave('🎙 파티 음성에서 나왔다')); on('pvN',()=>{ if(PV.needTap){ PV.needTap=0; document.querySelectorAll('audio[id^=pvAu_]').forEach(a=>a.play().catch(()=>{})); pvUI(); } }); }
+  b.style.display=PV.on?'flex':'none'; if(!PV.on) return; let n=0; for(const pc of PV.pcs.values()) if(pc.connectionState==='connected') n++;
+  $('pvN').textContent=PV.needTap?'소리 켜기 👆':`🎙 파티 ${n+1}명`+(pvMates().length>n?' · 잇는 중':''); $('pvM').textContent=PV.mute?'🔇':'🎤'; $('pvM').classList.toggle('off',PV.mute); b.style.top=($('callBar')&&$('callBar').style.display==='flex')?'262px':'172px'; }
+setInterval(()=>{ pvTick().catch(e=>console.warn('pv',e)); },1500);
+addEventListener('pagehide',()=>{ if(PV.on) for(const peer of PV.pcs.keys()) pvSig(peer,{t:'bye'}); });
+{ const st=document.createElement('style'); st.textContent='#pvBar{position:fixed;right:8px;top:172px;z-index:41;display:none;gap:6px;align-items:center;padding:6px 8px;border-radius:14px;background:rgba(10,30,16,.9);border:2px solid #7be38a;color:#eaffee;font-size:12px}#pvBar span{cursor:pointer}#pvBar #pvM,#pvBar #pvX{background:rgba(255,255,255,.1);border-radius:8px;padding:3px 6px}#pvBar #pvM.off{opacity:.5}'; document.head.appendChild(st); }
 function callInit(){ if(!MP.room||!MP.room.onSig||CALL.on) return; CALL.on=1; MP.room.onSig(o=>{ callOnSig(o).catch(e=>console.warn('call',e)); }); }
 setInterval(callInit,1000);
 { const b=document.createElement('div'); b.id='callBar'; b.innerHTML='<div class="cn">📞 <b id="cbN"></b></div><div id="cbT"></div><div class="cbb"><span id="cbMute">🎤</span><span id="cbPty">🤝</span><span id="cbEnd">✕</span></div><div class="cbe"><span id="cbRe">📞 다시</span><span id="cbX">닫기</span></div>'; document.body.appendChild(b);
@@ -4142,15 +4233,17 @@ function pplHtml(){ const ps=mpPeers(); if(!MP.room&&!ps.length) return ''; let 
   for(const p of [...ps].sort((a,b)=>isParty(b)-isParty(a))){ const q=p.presence||{}, a=String(q.a||'hub'), pt=isParty(p); let w=a==='hub'?'모닥불 거점':a.startsWith('f:')?(FIELDS[a.slice(2)]?FIELDS[a.slice(2)].name:'지역 필드'):a==='w'?'서울 지도':'걷는 중';
     let far=''; if(a===ar&&a!=='hub'&&typeof q.x==='number'){ const dx=q.x-P0.x, dz=q.z-P0.z, d=Math.hypot(dx,dz); const dirs=['→','↘','↓','↙','←','↖','↑','↗']; const i=((Math.round(Math.atan2(dz,dx)/(Math.PI/4))%8)+8)%8; far=` · ${dirs[i]} ${Math.round(d*MPU())}m`; }
     const inv=PTY.inv&&PTY.inv.to===p.peer, oncall=CALL.st&&CALL.peer===p.peer;
-    const act=`<div class="pAct">${cc?`<span class="pb${oncall?' on':''}" data-a="call" data-p="${p.peer}">${oncall?'📞 통화 중':'📞'}</span>`:''}${pt?'<span class="pb on">🤝 파티</span>':`<span class="pb" data-a="pty" data-p="${p.peer}">${inv?'🤝 청하는 중…':'🤝 파티'}</span>`}</div>`;
+    const go=ar==='hub'&&a.startsWith('f:')&&FIELDS[a.slice(2)]?`<span class="pb" data-a="go" data-f="${a.slice(2)}">🚶 ${pt?'파티원에게':'그쪽으로'} 가기</span>`:'';
+    const act=`<div class="pAct">${go}${cc?`<span class="pb${oncall?' on':''}" data-a="call" data-p="${p.peer}">${oncall?'📞 통화 중':'📞'}</span>`:''}${pt?'<span class="pb on">🤝 파티</span>':`<span class="pb" data-a="pty" data-p="${p.peer}">${inv?'🤝 청하는 중…':'🤝 파티'}</span>`}</div>`;
     h+=`<div class="sk${pt?' pt':''}"><div class="si">${q.dn===1?'💤':(q.e|0)>0?'🔥':pt?'🤝':'👤'}</div><div style="flex:1"><div class="sn">${mpName(p)}<small>${q.l?'Lv '+q.l:''}</small></div><div class="sd">${w}${far}${q.dn===1?' · 쓰러짐':''}${(q.e|0)>0?' · 불씨 '+(q.e|0):''}</div>${act}</div></div>`; }
-  if(PTY.id) h+='<div class="pAct" style="justify-content:center;margin-top:4px"><span class="pb" data-a="leave">파티 나가기</span></div>';
+  if(PTY.id) h+=`<div class="pAct" style="justify-content:center;margin-top:4px">${cc?`<span class="pb${PV.on?' on':''}" data-a="pv">${PV.on?'🎙 파티 음성 나가기':'🎙 파티 음성 켜기 (4명까지)'}</span>`:''}<span class="pb" data-a="leave">파티 나가기</span></div>`;
   if(CALL.log.length) h+='<div class="ph">최근 통화</div>'+CALL.log.map(c=>`<div class="none">${c.tm} · ${c.nm}${c.dur?' · '+c.dur:''} · ${c.why}</div>`).join('');
   if(!cc&&ps.length) h+=`<div class="none" style="font-size:11px">${MP.room&&MP.room.ext?'이 브라우저는 통화가 안 된다':'📞 전화는 GitHub 판에서만 된다'}</div>`;
   return h; }
 function pplAct(e){ const a=e.target.closest('[data-a]'); if(!a) return; e.preventDefault(); e.stopPropagation(); const k=a.dataset.a, peer=a.dataset.p;
   if(k==='call'){ if(CALL.st&&CALL.peer===peer) return toast('위쪽 통화 막대의 ✕로 끊기'); callStart(peer); }
-  else if(k==='pty'){ ptInvite(peer); setTimeout(pplRefresh,50); } else if(k==='leave') ptLeave(); }
+  else if(k==='pty'){ ptInvite(peer); setTimeout(pplRefresh,50); } else if(k==='leave') ptLeave(); else if(k==='pv'){ if(PV.on) pvLeave('🎙 파티 음성에서 나왔다'); else pvJoin(); setTimeout(pplRefresh,300); }
+  else if(k==='go'){ const fk=a.dataset.f; if(!FIELDS[fk]||mpArea()!=='hub') return; ['pause','ppl'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('show'); }); openPanel(null); startRun(fk); } }
 function pplRefresh(){ const P=$('pPpl'); if(P&&$('pause').classList.contains('show')) P.innerHTML=pplHtml(); const H=$('pplL'); if(H&&$('ppl').classList.contains('show')) H.innerHTML=pplHtml(); }
 { const d=document.createElement('div'); d.className='ov'; d.id='ppl'; d.style.zIndex=38; d.style.background='rgba(7,6,12,.95)'; d.innerHTML='<h2>👥 접속한 사람</h2><div id="pplL" style="width:min(92vw,380px);max-height:62vh;overflow:auto"></div><div class="btn big" id="pplX" style="margin-top:12px">닫기</div>'; document.body.appendChild(d);
   d.addEventListener('pointerdown',pplAct); $('pplX').onclick=()=>d.classList.remove('show');
@@ -4193,6 +4286,9 @@ function mpTick(dt){ const R=MP.room; if(!R) return; const area=mpArea(), now=pe
     else if(MP.fpLast&&MP.fpLastA&&MP.fpLastA.startsWith('f:')){ R.fieldPut(MPF.fk||MP.fpLastA.slice(2),{...MP.fpLast,t:Date.now()}); MP.fpLast=null; }
     MP.fpLastA=area; }
   const peers=mpPeers();
+  // v2.31 파티 안내: 필드에 들어설 때 · 파이널 체력 25% (기획자 05:40)
+  if(inF&&PTY.id&&MP.ptA!==area){ MP.ptA=area; setTimeout(()=>{ if(S&&S.phase==='play'&&PTY.id) toast('🤝 파티로 들어왔다','⚠ 파이널을 잡으면 파티가 풀린다 · 불씨는 하나'); },2500); } if(!inF) MP.ptA=null;
+  if(inF&&S&&!S.ptWarn&&PTY.id&&boss.alive&&!boss.dying&&boss.maxhp>0&&boss.hp/boss.maxhp<.25){ const Z=(MY.zones||[]).find(z=>z.id===boss.zid); if(Z&&!Z.mid&&mpFieldPeers().some(ptRaw)){ S.ptWarn=1; toast('⚠ 곧 끈이 끊어진다','파이널이 쓰러지면 파티도 풀린다 · 불씨는 하나'); buzz([40,30,40]); } }
   if(inF){ mpAdoptRound(false);
     // 같은 불씨를 거의 같이 주웠으면: peer 이름이 앞선 쪽이 가진다(모두에게 같은 규칙)
     if(S.emG&&S.emG.length&&MP.me){ for(let i=S.emG.length-1;i>=0;i--){ const e=S.emG[i]; if(!e.id||now-e.t>6000) continue; for(const p of mpFieldPeers()){ if(Array.isArray(p.presence.pk)&&p.presence.pk.includes(e.id)&&p.peer<MP.me){ S.emG.splice(i,1); S.ember=S.emG.length; MPF.pk=MPF.pk.filter(x=>x!==e.id); MPF.pk.push(e.id); lootHud(); toast(`🔥 ${mpName(p)}가 한발 먼저 주웠다`,'쫓아가서 쓰러뜨리면 떨어진다'); break; } } } }
@@ -4210,7 +4306,7 @@ function mpTick(dt){ const R=MP.room; if(!R) return; const area=mpArea(), now=pe
     if(!MP.seen.has(p.peer)&&now-G.t0>1200){ MP.seen.add(p.peer); toast(`👥 ${mpName(p)}가 같은 거리에 있다`,'불씨를 들기 전까진 서로 싸울 수 없다'); }
     const gp=G.g.position, dx=pr.x-gp.x, dz=pr.z-gp.z, d=Math.hypot(dx,dz); if(d>25) gp.set(pr.x,0,pr.z); else { const k=Math.min(1,dt*10); gp.x+=dx*k; gp.z+=dz*k; } if(Math.abs(dx)>.03) G.fx=dx<0?-1:1; G.g.userData.m.scale.x=G.fx;
     const hold=inF&&(pr.e|0)>0&&pr.r===MPF.rd; G.nm=mpName(p);
-    if(pty&&Math.hypot(gp.x-P.x,gp.z-P.z)<14) ptN=true;
+    G.pty=pty; if(pty&&Math.hypot(gp.x-P.x,gp.z-P.z)<14) ptN=true;
     if(hold&&!G.hold&&!MPF.holdSeen.has(p.peer+':'+pr.e)){ MPF.holdSeen.add(p.peer+':'+pr.e); if(pty) toast(`🔥 파티원 ${G.nm}가 불씨를 들었다`,'모닥불까지 지켜 주자'); else if(S.fLoot>0) toast(`⚔ ${G.nm}가 불씨를 들었다 — 덮쳐라`,'모닥불에 닿기 전에 쓰러뜨리면 그 자리에 떨어진다'); else toast(`🔥 ${G.nm}가 불씨 덩어리를 들었다`,'모닥불에 닿기 전에 쓰러뜨리면 떨어진다'); }
     G.hold=hold; G.beam.visible=hold; G.ring.material.color.set(hold?0xff9a40:pty?0x7be38a:0x5ad0ff);
     const dn=inF&&pr.dn===1; if(dn&&!G.dnT){ G.dnT=1; toast(`${G.nm}가 쓰러졌다`,'곁에 3초 서 있으면 일으켜 세운다'); } if(!dn) G.dnT=0;
@@ -4235,7 +4331,7 @@ function tick(now){
 }
 requestAnimationFrame(tick);
 if(BOT){ $('title').classList.remove('show'); sndInit(); SV.region=location.search.includes('seoul')?'seoulst':location.search.includes('myeong')?'myeong':'namsan'; SV.char=(location.search.match(/char=(\w+)/)||[])[1]||'fire'; startRun(location.search.includes('mfield')?'myeong':location.search.includes('sfield')?'suwon':null); }
-window.__dbg={DBG,PTY,CALL,callRe:()=>callRe(),callStart:p=>callStart(p),ptInvite:p=>ptInvite(p),ghostTap:(x,y)=>ghostTap(x,y),pplHtml:()=>pplHtml(),lootHud:()=>lootHud(),stackTop:()=>stackTop(),MPF,MP,evoMoment:(k,two)=>evoMoment(k,two),zoneKilled:(i,m)=>zoneKilled(zoneById(i),m,"민수"),blocked,BG,mkSpot:(x,z,b)=>mkSpot(x,z,b),get SPOTS(){return SPOTS;},makeGear,lootConfirm,spawn:(t,d)=>spawnAround(t,d),hit:(e,n)=>damage(e,n),get worldG(){return worldG;},FOGA:()=>FOG,terr,SITES,get S(){return S;},get SV(){return SV;},get MY(){return MY;},get R3(){return {renderer,scene,camera,amb,moon};},fieldReset:()=>fieldReset(),roundEnd:f=>roundEnd(f),fieldInherit:fk=>fieldInherit(fk),die:()=>{S.hp=0;gameOver();},hitBoss:n=>damageBoss(n,"dbg"),enemies,boss,player,setTs:v=>DBG.ts=v,lv:()=>{S.pendingLv++;},give:(k,l=1)=>{S.W[k]=l; if(k==='shadow') shadowP.root.visible=true; renderSlots();},startRun,enterHub};
+window.__dbg={WEAPONS,EVOS,FUS,BR,PV,pvJoin:()=>pvJoin(),pvLeave:()=>pvLeave(),ptRaw:p=>ptRaw(p),DBG,PTY,CALL,callRe:()=>callRe(),callStart:p=>callStart(p),ptInvite:p=>ptInvite(p),ghostTap:(x,y)=>ghostTap(x,y),pplHtml:()=>pplHtml(),lootHud:()=>lootHud(),stackTop:()=>stackTop(),MPF,MP,evoMoment:(k,two)=>evoMoment(k,two),zoneKilled:(i,m)=>zoneKilled(zoneById(i),m,"민수"),blocked,BG,mkSpot:(x,z,b)=>mkSpot(x,z,b),get SPOTS(){return SPOTS;},makeGear,lootConfirm,spawn:(t,d)=>spawnAround(t,d),hit:(e,n)=>damage(e,n),get worldG(){return worldG;},FOGA:()=>FOG,terr,SITES,get S(){return S;},get SV(){return SV;},get MY(){return MY;},get R3(){return {renderer,scene,camera,amb,moon};},fieldReset:()=>fieldReset(),roundEnd:f=>roundEnd(f),fieldInherit:fk=>fieldInherit(fk),die:()=>{S.hp=0;gameOver();},hitBoss:n=>damageBoss(n,"dbg"),enemies,boss,player,setTs:v=>DBG.ts=v,lv:()=>{S.pendingLv++;},give:(k,l=1)=>{S.W[k]=l; if(k==='shadow') shadowP.root.visible=true; renderSlots();},startRun,enterHub};
 
 </script>
 </body>
