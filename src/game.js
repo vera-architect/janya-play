@@ -46,7 +46,8 @@ const TUNE_DEF={
   night:{n:'거리 밝기(밤 저승 빛)',v:1,min:.4,max:2.5,st:.05},
   nsat:{n:'거리 색 진하기',v:1,min:0,max:1.8,st:.05},
   newb:{n:'새 사람 불씨 가호 세기',v:1,min:0,max:2,st:.1},
-  ptxp:{n:'파티원 곁 경험 더(비율)',v:.15,min:0,max:1,st:.05}};
+  ptxp:{n:'파티원 곁 경험 더(비율)',v:.15,min:0,max:1,st:.05},
+  bcv:{n:'바코드 각성 방식 (0 지금 · 1 쓰러지면 터짐 · 2 쌓이면 터짐)',v:0,min:0,max:2,st:1}}; // v2.32 비교용(44번 A7)
 const TU=k=>(SV.tune&&typeof SV.tune[k]==='number'?SV.tune[k]:TUNE_DEF[k].v);
 // v2.24 새 사람 불씨 가호: 처음 걷는 사람은 강화가 없어 1분 반이면 쓰러졌다(33 2장). 산 강화 칸이 10개가 될 때까지 서서히 옅어진다.
 const newbK=()=>{ if((SV.ash||0)>0||location.search.includes('nonewb')) return 0; return Math.max(0,1-(SV.bought||0)/10)*TU('newb'); };
@@ -1684,6 +1685,7 @@ function kill(e){
   if(big){ HS=Math.max(HS,e.d.treasure?.09:.05); DBG.shake=Math.max(DBG.shake||0,.18); }
   if(e.d.treasure){ dnum(e.x,e.d.h+.6,e.z,'보물!','gold'); fx(e.x,e.z,2.4,[1,.8,.3],.6); }
   const mult=e.mark?2:1; const lm=luckMul();
+  if(e.mark&&S.evo&&S.evo.barcode&&Math.round(TU('bcv'))===1){ (S.bcQ||(S.bcQ=[])).length<40&&S.bcQ.push([e.x,e.z]); } // v2.32 안ㄱ: 표시된 것이 쓰러지면 그 자리에서 바로 정산
   if(e.mark&&S.br.barcode==='b'){ let nx=null,nd=9; near(e.x,e.z,3,o=>{ if(o.dead||o.mark||o===e) return; const d=(o.x-e.x)**2+(o.z-e.z)**2; if(d<nd){nd=d;nx=o;} }); if(nx) nx.mark=true; }
   if(e.d.treasure){ S.treasures++; S.bossesW=(S.bossesW||0)+.5; 
     if(e.type==='gpig'){ S.treasures+=2; treasureLoot(e); treasureLoot(e); toast('금돼지를 잡았다','금빛 조각이 쏟아진다'); }
@@ -1811,7 +1813,12 @@ function weapons(dt){
   s.might=M0*pm('barcode');
   if(W.barcode&&ready('barcode',dt,(2.0-.15*W.barcode)*s.cd*(W.barcode>=3?.85:1))){ fireBarcode(P.x,P.z,1,s,S); if(sm){ S.shSweepO=true; fireBarcode(SP.x,SP.z,sm,s,S.sh||(S.sh={})); } }
   stepSweep(S,P.x,P.z,dt); if(S.sh) stepSweep(S.sh,SP.x,SP.z,dt);
-  if(E.barcode&&ready('settle',dt,5)){ let n=0; for(const e of enemies){ if(e.mark&&!e.dead){ n++; fx(e.x,e.z,1.2,[1,.78,.3],.3); evoEv('barcode',e.x,e.z,1.2); near(e.x,e.z,1.2,o=>damage(o,35*s.might)); } } if(n) sfx.beep(); }
+  const BCV=Math.round(TU('bcv'));
+  if(E.barcode&&BCV===2){ // v2.32 안ㄴ: 표시가 6개 쌓이거나 2.5초마다 정산 · 많이 쌓였을수록 세게
+    S.bcT=(S.bcT||0)+dt; let m=0; for(const e of enemies) if(e.mark&&!e.dead) m++;
+    if(m&&(m>=6||S.bcT>=2.5)){ S.bcT=0; const mul=1+Math.min(m,20)*.04; for(const e of enemies){ if(e.mark&&!e.dead){ fx(e.x,e.z,1.2,[1,.78,.3],.3); evoEv('barcode',e.x,e.z,1.2); near(e.x,e.z,1.2,o=>damage(o,35*s.might*mul)); } } DBG.bcN=(DBG.bcN||0)+1; sfx.beep(); } }
+  else if(E.barcode&&ready('settle',dt,5)){ let n=0; for(const e of enemies){ if(e.mark&&!e.dead){ n++; fx(e.x,e.z,1.2,[1,.78,.3],.3); evoEv('barcode',e.x,e.z,1.2); near(e.x,e.z,1.2,o=>damage(o,35*s.might)); } } if(n){ sfx.beep(); DBG.bcN=(DBG.bcN||0)+1; } }
+  if(S.bcQ&&S.bcQ.length){ const q=S.bcQ.splice(0,12); for(const [x,z] of q){ fx(x,z,1.3,[1,.78,.3],.3); evoEv('barcode',x,z,1.3); near(x,z,1.3,o=>damage(o,35*s.might)); DBG.bcN=(DBG.bcN||0)+1; } if(q.length) sfx.beep(); }
   // 물줄기
   s.might=M0*pm('hose');
   if(W.hose){ const evo=E.hose;
@@ -2603,7 +2610,7 @@ function openTune(){ let el=$('tunePanel'); if(!el){ el=document.createElement('
   $('tCopy').onclick=()=>{ const ch=Object.keys(TUNE_DEF).filter(k=>TU(k)!==TUNE_DEF[k].v); const txt=`조정 값 — 잔야 ${document.title.match(/v[\d.]+\w*/)?.[0]||''}\n`+(ch.length?ch.map(k=>`${TUNE_DEF[k].n} = ${fmtTune(k,TU(k))} (${k}=${TU(k)}, 처음 ${TUNE_DEF[k].v})`).join('\n'):'(바꾼 값 없음)');
     const o=$('tOut'); o.value=txt; o.style.display='block'; o.select(); try{ navigator.clipboard.writeText(txt).then(()=>toast('📋 복사했다','Claude에게 붙여 넣기')).catch(()=>toast('아래 글을 길게 눌러 복사','')); }catch(e){ toast('아래 글을 길게 눌러 복사',''); } };
   el.classList.add('show'); }
-function fmtTune(k,v){ return k==='loot'?Math.round(v)+'초':'×'+(+v).toFixed(2).replace(/0$/,''); }
+function fmtTune(k,v){ if(k==='bcv') return ['지금','쓰러지면 터짐','쌓이면 터짐'][Math.round(v)]||v; return k==='loot'?Math.round(v)+'초':'×'+(+v).toFixed(2).replace(/0$/,''); }
 function openPanel(id){ ['pUp','pMap','pChar','pFlow','pTree','pGear'].forEach(p=>$(p).classList.toggle('show',p===id)); }
 
 // v2.7 장비 창 · 강화 (18번 3장: +1~3 실패 없음 / +4~9 실패 -1 / +10~15 실패 -1 또는 낮은 확률 파괴)
