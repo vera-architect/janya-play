@@ -27,7 +27,7 @@ const fName=()=>S&&S.field&&FIELDS[S.field]?FIELDS[S.field].name:''; // v2.8 지
 /* ============ 저장 (이 기기 브라우저에만) ============ */
 const SAVE_KEY='janya_v2';
 function loadSave(){ let d={}; try{ d=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}'); }catch(e){}
-  return Object.assign({shards:0,up:{},chars:{fire:true},cleared:{},choice:{},seen:{},runs:0,intro:false,best:{},carry:null,released:0,taken:0,buried:0,region:'namsan',char:'fire',vib:true,found:{},heat:0,lit:{},fog:''},d); }
+  return Object.assign({shards:0,up:{},chars:{fire:true},cleared:{},choice:{},seen:{},runs:0,intro:false,best:{},carry:null,released:0,taken:0,buried:0,region:'namsan',char:'fire',vib:true,found:{},heat:0,lit:{},fog:'',told:{}},d); }
 let SV=loadSave();
 if(SV.bought==null){ SV.bought=Object.values(SV.up||{}).reduce((a,b)=>a+b,0); }
 function save(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(SV)); }catch(e){} }
@@ -402,7 +402,7 @@ function safeTick(dt,P,t){ let sk=null,sd=1e9; for(const k in SITES){ if(!isLit(
   S.inSafe=!!sk&&sd<SAFE_R-.2; if(!sk||sd>SAFE_R+25) return; const F=SITES[sk];
   for(const e of enemies){ if(e.dead||e.d.treasure) continue; const dx=e.x-F.x,dz=e.z-F.z,d=Math.hypot(dx,dz)||.01, R=SAFE_R+e.d.r*.6; if(d<R){ e.x=F.x+dx/d*R; e.z=F.z+dz/d*R; e.kx=dx/d*3; e.kz=dz/d*3; if(e.ch) e.ch=null; } }
   for(let i=foxShots.length-1;i>=0;i--){ const f=foxShots[i]; if(Math.hypot(f.x-F.x,f.z-F.z)<SAFE_R) foxShots.splice(i,1); }
-  if(S.inSafe){ if(S.hp<S.maxhp) S.hp=Math.min(S.maxhp,S.hp+S.maxhp*.04*dt); if(S.hails) S.hails.length=0; if(!S.safeMsg){ S.safeMsg=1; toast('모닥불 곁','불빛 안에선 아무도 싸울 수 없다 · 쉬는 동안 괴수가 흩어진다'); } safeScatter(F,dt); } else if(sd>SAFE_R+3) S.safeMsg=0; }
+  if(S.inSafe){ if(S.hp<S.maxhp) S.hp=Math.min(S.maxhp,S.hp+S.maxhp*.04*dt); if(S.hails) S.hails.length=0; if(!S.safeMsg){ S.safeMsg=1; if(S.t>3) toastOnce('safe','모닥불 곁','불빛 안에선 아무도 싸울 수 없다 · 쉬는 동안 괴수가 흩어진다',true); else S.safeMsg=0; } safeScatter(F,dt); } else if(sd>SAFE_R+3) S.safeMsg=0; }
 
 // v2.11: 불 곁에서 쉬면 둘레에 몰린 괴수가 조금씩 흩어진다(경험치 없음)
 function safeScatter(F,dt){ S.scT=(S.scT||0)-dt; if(S.scT>0) return; S.scT=.35; let n=0; for(const e of enemies){ if(n>=10) break; if(e.dead||e.d.treasure||e.type==='gangcheol') continue; if(Math.hypot(e.x-F.x,e.z-F.z)<SAFE_R+16){ e.dead=true; n++; if(Math.random()<.4) burst(e.x,.6,e.z,2,1.5); } } }
@@ -505,11 +505,11 @@ function pickFront(x,z,dmin,dmax){ const P0=[x,z], L=[];
   return L.length?L[Math.floor(Math.random()*L.length)]:null; }
 function fieldSpots(P){ const lp=S.fLoot>0; S.spotT=lp?2.5+Math.random()*2:10+Math.random()*5;
   if(SPOTS.filter(o=>!o.boss).length>=(lp?8:3)) return; const f=pickFront(P.x,P.z,lp?5:9,lp?28:24); if(!f) return;
-  mkSpot(f.x,f.z,lp&&Math.random()<.3,f.s); if(!lp&&!S.spotTold){ S.spotTold=1; toast(gi('u_spark')+' 빛나는 가게',`${f.s.name} · 위에 서 있으면 뒤진다`); } }
+  mkSpot(f.x,f.z,lp&&Math.random()<.3,f.s); if(!lp&&!S.spotTold){ S.spotTold=1; toastOnce('spot',gi('u_spark')+' 빛나는 가게',`${f.s.name} · 위에 서 있으면 뒤진다`,true); } }
 function fieldTick(dt,P){ S.distLit=0; S.onRoad=false; S.inWood=false;
-  S.shT=(S.shT||0)-dt; if(S.shT<=0){ S.shT=.2; const s=MY.nearShop(P,3.4), el=$('shopTag'); if(el&&s!==S.shop){ S.shop=s; if(s){ const C=MY.CAT[s.c]; el.innerHTML=`<b>${s.name}</b> <span>${C.k}</span><small>뒤지면: ${C.loot}</small>`; el.style.opacity=1; } else el.style.opacity=0; } }
+  S.shT=(S.shT||0)-dt; if(S.shT<=0){ S.shT=.2; const s0=MY.nearShop(P,3.4), s=s0&&SPOTS.some(o=>o.shop===s0)?s0:null, el=$('shopTag'); if(el&&s!==S.shop){ S.shop=s; if(s){ const C=MY.CAT[s.c]; el.innerHTML=`<b>${s.name}</b> <span>${C.k}</span><small>뒤지면: ${C.loot}</small>`; el.style.opacity=1; } else el.style.opacity=0; } }
   const nf=nearFire(P), d=nf.d;
-  if(S.fLoot>0&&d<SAFE_R-.2&&!S.doom&&S.phase==='play'){ S.inSafe=true; emberConfirm(); roundEnd(false); return; } if(d>7) S.fireCd=false; else if(d<2.8&&!S.fireCd&&S.phase==='play'&&!boss.alive&&!S.doom){ S.fireCd=true; fieldFire(nf.f); }
+  if(S.fLoot>0&&d<SAFE_R-.2&&!S.doom&&S.phase==='play'){ S.inSafe=true; emberConfirm(); roundEnd(false); return; } if(d>7) S.fireCd=false; else if(d<2.8&&!S.fireCd&&S.phase==='play'&&!boss.alive&&!S.doom&&S.t>40){ S.fireCd=true; fieldFire(nf.f); } // v2.35: 막 나선 첫 40초엔 「기지로 돌아갈까」를 묻지 않는다
   if(S.doom){ doomTick(dt,P); }
   else if(S.fLoot>0){ S.fLoot-=dt; const el=$('fLootT'); if(el){ el.style.display='block'; el.classList.remove('sm'); el.dataset.t=''; const r=Math.max(0,Math.ceil(S.fLoot)); el.innerHTML=`🔥 모닥불로 <b>${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}</b><small>빛 안에 닿으면 판 끝 · 늦으면 ？？？가 깨어난다${S.ember?' · 불씨도 꺼진다':''}</small>`; el.classList.toggle('warn',r<=30&&!S.inSafe); }
     if(S.fLoot<=0){ if(S.inSafe) roundEnd(false); else doomStart(); } }
@@ -531,7 +531,7 @@ function fieldSafe(dt,P,t){ MY.ring.material.opacity=.38+.18*Math.sin(t*3); mist
   S.inSafe=d<SAFE_R-.2; if(S.inSafe&&S.phase==='play'&&(S.ember||(S.loot&&S.loot.length))) emberConfirm(); if(d>SAFE_R+25) return;
   for(const e of enemies){ if(e.dead||e.d.treasure) continue; const dx=e.x-F.x,dz=e.z-F.z,dd=Math.hypot(dx,dz)||.01, R=SAFE_R+e.d.r*.6; if(dd<R){ e.x=F.x+dx/dd*R; e.z=F.z+dz/dd*R; e.kx=dx/dd*3; e.kz=dz/dd*3; if(e.ch) e.ch=null; } }
   for(let i=foxShots.length-1;i>=0;i--){ const f=foxShots[i]; if(Math.hypot(f.x-F.x,f.z-F.z)<SAFE_R) foxShots.splice(i,1); }
-  if(S.inSafe){ if(S.hp<S.maxhp) S.hp=Math.min(S.maxhp,S.hp+S.maxhp*.04*dt); if(S.hails) S.hails.length=0; if(!S.safeMsg){ S.safeMsg=1; toast('모닥불 곁','불빛 안에선 아무도 싸울 수 없다 · 쉬는 동안 괴수가 흩어진다'); } safeScatter(F,dt); } else if(d>SAFE_R+3) S.safeMsg=0; }
+  if(S.inSafe){ if(S.hp<S.maxhp) S.hp=Math.min(S.maxhp,S.hp+S.maxhp*.04*dt); if(S.hails) S.hails.length=0; if(!S.safeMsg){ S.safeMsg=1; if(S.t>3) toastOnce('safe','모닥불 곁','불빛 안에선 아무도 싸울 수 없다 · 쉬는 동안 괴수가 흩어진다',true); else S.safeMsg=0; } safeScatter(F,dt); } else if(d>SAFE_R+3) S.safeMsg=0; }
 /* ============ v2.10 한 판 (28번): 중간보스 3 → 파이널 1 · 바닥 불씨는 먼저 줍는 사람 것 · 파이널 뒤 3분 안에 모닥불 ============
    혼자서도 같은 구조. 멀티(room presence)에선 판 번호(r)·보낸 보스(bd)·보스에 준 피해(bh)·주운 불씨(pk)·흘린 불씨(dr)를 서로 맞춘다. */
 const MID_HP=1, FIN_HP=2.5, MID_N=3;
@@ -1509,22 +1509,27 @@ function spawnAround(type,dist){
   let x=P.x+Math.cos(a)*r, z=P.z+Math.sin(a)*r; if(!WORLD){ const l=Math.hypot(x,z); if(l>ARENA-1){ x*=(ARENA-1)/l; z*=(ARENA-1)/l; } } else { x=Math.max(-LIM,Math.min(LIM,x)); z=Math.max(-LIM,Math.min(LIM,z)); }
   return spawn(type,x,z);
 }
+// v2.35 처음 하는 사람 도움 세기(처음 5분 동안 옅어짐)
+const nbNow=()=>Math.min(1,S.nb||0)*Math.max(0,1-(S.t||0)/300);
 function director(dt){
   const t=S.t; if(FIELD&&S.fLoot>0){ fieldZone(); return; }
   // v2.11: 모닥불 곁에 있는 동안엔 괴수가 새로 생기지 않는다(불 둘레 괴수 벽 막기). 그동안 닥칠 포위도 건너뜀
-  if(WORLD&&S.inSafe){ S.spawnAcc=0; S.eliteT=Math.max(S.eliteT,t+6); for(const ev of [90,150,210,270]) if(t>=ev) S.eventsDone[ev]=1; if(FIELD) fieldZone(); else zoneCheck(); return; }
+  if(WORLD&&S.inSafe){ S.wasSafe=1; S.spawnAcc=0; S.eliteT=Math.max(S.eliteT,t+6); for(const ev of [90,150,210,270]) if(t>=ev) S.eventsDone[ev]=1; if(FIELD) fieldZone(); else zoneCheck(); return; }
+  if(!S.welc&&S.wasSafe&&(FIELD||WORLD)&&MY&&MY.fires){ S.welc=1; DBG.welcT=S.t; const P=player.root.position, nf=nearFire(P).f, c=Math.atan2(P.z-nf.z,P.x-nf.x), R=5.2, n=9;
+    for(let i=0;i<n;i++){ const a=c+(i/(n-1)-.5)*3.4+rr(-.12,.12), r=R+rr(-1,1.5); spawn('shade',P.x+Math.cos(a)*r,P.z+Math.sin(a)*r); } }
+  const nbF=nbNow();
   const wmul=WORLD?(1+(S.distLit||0)/500)*(S.onRoad?1.3:S.inWood?.85:1):1;
   if(WORLD?boss.alive:(S.bossSpawned&&!S.bossDead&&!S.endless)){ S.spawnAcc+=dt*Math.min(6,1+t/80)*TU('spawn'); }
   else S.spawnAcc+=dt*Math.min(MOBILE?15:18,1.4+(WORLD?Math.min(t,240):t)/10)*(1+.2*(S.heat||0))*wmul*TU('spawn')*(1-.25*Math.min(1.5,S.nb||0)*Math.max(0,1-t/240));
   const wispP=S.region==='seoulst'?.12:S.region==='myeong'?.4:.22;
-  while(S.spawnAcc>=1){ S.spawnAcc-=1; spawnAround(t>35&&Math.random()<wispP?'wisp':'shade'); }
-  if(t>=S.eliteT){ S.eliteT+=Math.max(10,32-t/12); const n=1+Math.floor(t/180)+(S.region==='seoulst'?1:S.region==='myeong'?2:0); for(let i=0;i<n;i++) spawnAround('elite'); }
-  if(t>=S.treasureT){ S.treasureT+=45/(1+.4*upLv('lure')); spawnAround(Math.random()<.5?'toad':'magpie',spawnR()*.8); toast('보물 괴수','작은 것이 무언가를 물고 달아난다'); }
+  while(S.spawnAcc>=1){ S.spawnAcc-=1; spawnAround(t>(nbF>.3?50:35)&&Math.random()<wispP?'wisp':'shade'); }
+  if(t>=S.eliteT){ S.eliteT+=Math.max(10,32-t/12); const n=Math.max(1,1+Math.floor(t/180)+(S.region==='seoulst'?1:S.region==='myeong'?2:0)-(nbF>.3?1:0)); for(let i=0;i<n;i++) spawnAround('elite'); }
+  if(t>=S.treasureT){ S.treasureT+=45/(1+.4*upLv('lure')); spawnAround(Math.random()<.5?'toad':'magpie',spawnR()*.8); toastOnce('treasure','보물 괴수','작은 것이 무언가를 물고 달아난다'); }
   // v2.5 설화 괴수
-  if(t>=(S.ygT??(S.ygT=70))){ S.ygT+=rr(55,80); spawnAround('yagwang'); toast('야광귀','신을 노리는 밤의 것이 다가온다'); }
-  if(t>=(S.gcT??(S.gcT=S.region==='namsan'?150:110))){ S.gcT+=rr(70,100); spawnAround('gangcheol'); toast('강철이','우박 냄새가 난다 · 흰 원을 피하라'); }
-  if(t>=(S.ynT??(S.ynT=WORLD?95:130))){ S.ynT+=rr(80,115); spawnAround('yeongno'); toast('영노','무엇이든 삼키는 것이 나타났다 · 괴수를 먹을수록 커진다'); }
-  if(t>=(S.gpT??(S.gpT=100))){ S.gpT+=rr(140,190); spawnAround('gpig',spawnR()*.8); toast('금돼지','금빛 돼지가 굴을 찾아 달아난다'); }
+  if(t>=(S.ygT??(S.ygT=70))){ S.ygT+=rr(55,80); spawnAround('yagwang'); toastOnce('yagwang','야광귀','신을 노리는 밤의 것이 다가온다'); }
+  if(t>=(S.gcT??(S.gcT=S.region==='namsan'?150:110))){ S.gcT+=rr(70,100); spawnAround('gangcheol'); toastOnce('gangcheol','강철이','우박 냄새가 난다 · 흰 원을 피하라'); }
+  if(t>=(S.ynT??(S.ynT=WORLD?95:130))){ S.ynT+=rr(80,115); spawnAround('yeongno'); toastOnce('yeongno','영노','무엇이든 삼키는 것이 나타났다 · 괴수를 먹을수록 커진다'); }
+  if(t>=(S.gpT??(S.gpT=100))){ S.gpT+=rr(140,190); spawnAround('gpig',spawnR()*.8); toastOnce('gpig','금돼지','금빛 돼지가 굴을 찾아 달아난다'); }
   for(const ev of [90,150,210,270]) if(t>=ev&&!S.eventsDone[ev]){ S.eventsDone[ev]=1; const n=24+ev/6, P=player.root.position;
     for(let i=0;i<n;i++){ const a=i/n*6.28; spawn(ev>=150&&i%3===0?'wisp':ev>=210&&i%8===0?'elite':'shade',P.x+Math.cos(a)*spawnR()*.8,P.z+Math.sin(a)*spawnR()*.8); }
     toast('저승의 것들이 에워싼다'); }
@@ -1542,7 +1547,7 @@ function spawnBoss(){
   boss.root.visible=true; boss.root.scale.setScalar(1); boss.mat.opacity=1; boss.mat.transparent=false; bossL.c.set(B.col); bossL.l.color.set(B.col); boss.halo.material.color.set(B.col); bossL.on=true;
   if(ZB){ const mx=Math.max(MPF.bm[ZB.id]||bossMaxFor(ZB),mpBossMax(ZB.id)); MPF.bm[ZB.id]=mx; boss.maxhp=mx; const od=mpBossDmg(ZB.id); MPF.oSeen[ZB.id]=od; boss.hp=Math.max(1,mx-(MPF.bdmg[ZB.id]||0)-od); }
   $('bossn').innerHTML=(ZB?(ZB.mid?gi('u_mid')+' 중간보스 · ':gi('u_final')+' '):'')+B.name; $('boss').style.display='block'; sndInit(); sfx.roar(); DBG.shake=1;
-  toast(B.name,B.line);
+  toastNow(B.name,B.line);
   if(S.ally>0) toast('쓰러져 있던 깨어난 자가 왔다','"이번엔 내가 갚을게."');
 }
 // v2.24 보스가 건물을 뚫고 다니지 않게: 움직인 뒤 건물 안이면 벽을 따라 미끄러진다. 1.6초 넘게 막히면 잠깐 틈을 비집고 지나간다(갇힘 방지).
@@ -1778,7 +1783,7 @@ function downTick(dt){ if(!S.down) return; const D=S.down, P=player.root.positio
   if(((D.t*4)|0)!==D._f){ D._f=(D.t*4)|0; downBan(); } }
 function hurtPlayer(n,once=false,soft=false){ n*=TU('edmg')*(1-.45*Math.min(1.5,S.nb||0));
   if(S.phase!=='play'||S.inSafe||S.down) return; if(once&&(S.iframe||0)>0) return; if(S.dash) return; if((S.jpInv||0)>0) return;
-  n*=st().armor; if(S.rush>0) n*=.4; S.hp-=n; S.hurtT=Math.min(1,S.hurtT+n*.08); sfx.hurt();
+  n*=st().armor; if(S.rush>0) n*=.4; if(BOT){ const k=(new Error().stack.split('\n')[2]||'').replace(/.*:(\d+):\d+\)?$/,'$1'); (DBG.hb||(DBG.hb={}))[k]=((DBG.hb[k]||0)+n); } S.hp-=n; S.hurtT=Math.min(1,S.hurtT+n*.08); sfx.hurt();
   if(once){ const P0=player.root.position; dnum(P0.x,1.9,P0.z,'-'+Math.max(1,Math.round(n)),'hurt'); if(!soft) HS=Math.max(HS,.07); }
   // v2.1 피격 반응: 진동 · 붉은 번쩍임 · 깜빡임 · 밀려남 (이어지는 접촉은 0.26초마다 한 번)
   const now=S.t;
@@ -2013,7 +2018,7 @@ addEventListener('keydown',e=>{ if(!S||!S.lvb||S.phase!=='play') return; const i
 function nextSpec(){
   if(S.pendingBr){ const k=S.pendingBr, B=BR[k];
     return {title:`갈래 · ${WEAPONS[k].ic} ${WEAPONS[k].name}`, cs:['a','b'].map(x=>({kind:'br',x,ic:x==='a'?'ㄱ':'ㄴ',name:B[x][0],tag:`${WEAPONS[k].ic} 갈래 ${x==='a'?'ㄱ':'ㄴ'}`,desc:B[x][1]})),
-      pick:c=>{ S.br[k]=c.x; SV.found['b_'+k+c.x]=1; S.pendingBr=null; toast(B[c.x][0],'갈래를 골랐다'); renderSlots(); }}; }
+      pick:c=>{ S.br[k]=c.x; SV.found['b_'+k+c.x]=1; S.pendingBr=null; renderSlots(); }}; }
   if(S.pendingLv>0) return {title:`⬆ 레벨 ${S.lv-S.pendingLv+1}${S.pendingLv>1?` <small style="opacity:.7">(+${S.pendingLv-1})</small>`:''}`, cs:choices(), pick:c=>{ apply(c); S.pendingLv--; }, rr:true};
   return null; }
 function openLevelUp(){ if(S.lvb) return; const sp=nextSpec(); if(!sp) return; lvbShow(sp.title,sp.cs,c=>{ sp.pick(c); afterCard(); },sp.rr&&S.reroll>0); }
@@ -2088,8 +2093,13 @@ function choiceRemains(after){
 }
 
 /* ============ 알림 ============ */
-let toastT=0;
-function toast(a,b=''){ const t=$('toast'); t.innerHTML=a+(b?`<small>${b}</small>`:''); t.style.opacity=1; toastT=2.2; }
+let toastT=0, toastQ=[];
+// v2.35 명동 다듬기: 알림은 줄을 서서 하나씩(2.2초 + 0.4초 틈), 4초 넘게 기다린 건 버린다 · toastNow = 보스처럼 바로
+function toastShow(a,b){ const t=$('toast'); t.innerHTML=a+(b?`<small>${b}</small>`:''); t.style.opacity=1; toastT=2.2; }
+function toast(a,b=''){ if(toastT>-.4&&toastT!==0){ if(toastQ.length<3&&!toastQ.some(q=>q.a===a)) toastQ.push({a,b,at:performance.now()}); return; } toastShow(a,b); }
+function toastNow(a,b=''){ toastQ.length=0; toastShow(a,b); }
+// 처음 한 번만 설명을 붙이고(저장에 남김), 다음부터는 이름만 · 이름도 필요 없으면 skip
+function toastOnce(k,a,b,skip){ SV.told=SV.told||{}; if(!SV.told[k]){ SV.told[k]=1; save(); toast(a,b); } else if(!skip) toast(a); }
 
 /* ============ 입력 ============ */
 const keys={}; addEventListener('keydown',e=>{ keys[e.key.toLowerCase()]=1; if(e.key==='Escape'||e.key==='p') togglePause(); }); addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
@@ -2210,7 +2220,7 @@ function update(dt){
     if(D.t<=0) S.dash=null; }
   director(dt); buildGrid(); if(!S.down) weapons(dt); bossUpdate(dt); downTick(dt);
   // 괴수 이동·상태
-  let touch=0;
+  let touch=0, touchMx=0;
   for(const e of enemies){ if(e.dead) continue; e.life+=dt; const d=e.d; let dx=P.x-e.x,dz=P.z-e.z; const dist=Math.hypot(dx,dz)||1;
     if(e.burn>0){ e.burn-=dt; e.btick=(e.btick||0)-dt; if(e.btick<=0){ e.btick=.4; damage(e,8*s.might); if(e.dead) continue; } }
     if(e.freeze>0){ e.freeze-=dt; e.flip=d.faceL?dx>0:dx<0; continue; }
@@ -2226,17 +2236,17 @@ function update(dt){
       if(e.ch){ e.ch.t-=dt; if(e.ch.ph===0){ sp=0; dx=e.ch.dx; dz=e.ch.dz; if(e.ch.t<=0){ e.ch.ph=1; e.ch.t=.4; sfx.shot(); } }
         else { dx=e.ch.dx; dz=e.ch.dz; sp=d.devour?13:11.5; if(!e.ch.hit&&dist<d.r*(e.gs||1)+.55){ e.ch.hit=1; hurtPlayer(d.devour?30:20,true); } if(e.ch.t<=0){ e.ch=null; e.atk=rr(3.5,6); } } }
       else if(e.atk<=0&&dist<7.5&&dist>1.6){ e.ch={ph:0,t:.8,dx:dx/dist,dz:dz/dist}; } }
-    if(e.type==='wisp'){ e.atk=(e.atk??rr(2,5))-dt; if(e.atk<=0){ e.atk=rr(4,7); if(dist<9&&foxShots.length<24){ e.cast=.5; shot(e.x,e.z,Math.atan2(dz,dx),6.5,.5); } } if(e.cast>0){ e.cast-=dt; sp*=.15; } }
+    if(e.type==='wisp'){ e.atk=(e.atk??rr(2,5))-dt; if(e.atk<=0){ e.atk=rr(4,7); if(dist<9&&foxShots.length<(nbNow()>.3?10:24)){ e.cast=.5; shot(e.x,e.z,Math.atan2(dz,dx),6.5,.5); } } if(e.cast>0){ e.cast-=dt; sp*=.15; } }
     if(d.hail){ e.hailT=(e.hailT??3)-dt; if(e.hailT<=0&&dist<14){ e.hailT=5.5; const H=S.hails||(S.hails=[]); for(let i=0;i<3;i++){ const a=rr(0,6.28), r=i?rr(1.2,3):0; H.push({x:P.x+Math.cos(a)*r,z:P.z+Math.sin(a)*r,t:1.3,w:0}); } } }
     if(e.type==='shade'&&!(e.fear>0)&&dist>2.2&&dist<16){ const k=Math.min(1,(dist-2.2)/6)*((e.ph%2)<1?.75:-.75), c=Math.cos(k), s2=Math.sin(k), nx=dx*c-dz*s2, nz=dx*s2+dz*c; dx=nx; dz=nz; } // v2.16 떼로 에워싼다(줄줄이 따라오지 않게)
     else if(e.type==='wisp'&&!(e.cast>0)){ const w=Math.sin(e.life*4.2+e.ph)*.9; const nx=dx-dz/dist*w*dist*.35, nz=dz+dx/dist*w*dist*.35; dx=nx; dz=nz; } // 갈지자로 촐랑
     const l=Math.hypot(dx,dz)||1; const eox=e.x, eoz=e.z; e.x+=(dx/l*sp+e.kx)*dt; e.z+=(dz/l*sp+e.kz)*dt; if(BG.g) unblock(e,eox,eoz); e.kx*=Math.exp(-dt*7); e.kz*=Math.exp(-dt*7);
     e.flip=d.faceL?dx>0:dx<0; e.flash=Math.max(0,e.flash-dt);
-    if(!d.treasure&&d.dmg&&!e.ch&&dist<d.r*.72+.2) touch+=d.dmg;
+    if(!d.treasure&&d.dmg&&!e.ch&&dist<d.r*.72+.2){ touch+=d.dmg; touchMx=Math.max(touchMx,d.dmg); }
   }
   for(const e of enemies){ if(e.dead) continue; near(e.x,e.z,e.d.r*2,o=>{ if(o===e) return; const dx=e.x-o.x,dz=e.z-o.z,d=Math.hypot(dx,dz),m=e.d.r+o.d.r; if(d<m&&d>.001){ const p=(m-d)*.5*Math.min(1,dt*10); e.x+=dx/d*p; e.z+=dz/d*p; } }); }
   if(FIELD){ fieldSafe(dt,P,S.t||0); if(S.inSafe) touch=0; lootTick(dt,P); } else if(WORLD){ safeTick(dt,P,S.t||0); if(S.inSafe) touch=0; lootTick(dt,P); }
-  if(touch>0&&!(S.iframe>0)) hurtPlayer(Math.min(touch,90)*.5,true,true);
+  if(touch>0&&!(S.iframe>0)) hurtPlayer(Math.min(touchMx+(touch-touchMx)*.35,90-45*nbNow())*.5,true,true);
   for(let i=enemies.length-1;i>=0;i--) if(enemies[i].dead) enemies.splice(i,1);
   // 강철이 우박: 파란 원이 깜빡이다 떨어진다
   if(S.hails) for(let i=S.hails.length-1;i>=0;i--){ const h=S.hails[i]; h.t-=dt; h.w-=dt; 
@@ -2467,7 +2477,7 @@ function draw(dt,t){
   glowB.end();
   if(!NOREN||(++NOREN_N%25===0)) renderer.render(scene,camera);
   if(S){ S.hurtT=Math.max(0,(S.hurtT||0)-dt*2); $('hurt').style.opacity=inRun?Math.min(.9,S.hurtT+(S.hp<S.maxhp*.3?.25+.15*Math.sin(t*6):0)):0; }
-  if(toastT>0){ toastT-=dt; if(toastT<=0) $('toast').style.opacity=0; }
+  if(toastT>0){ toastT-=dt; if(toastT<=0){ $('toast').style.opacity=0; toastT=-.0001; } } else if(toastT<0){ toastT-=dt; if(toastT<=-.4){ toastT=0; const now=performance.now(); while(toastQ.length&&now-toastQ[0].at>4000) toastQ.shift(); const q=toastQ.shift(); if(q) toastShow(q.a,q.b); } }
   uiT-=dt; if(uiT<=0){ uiT=.1; if(S&&inRun) ui(); }
   arrows(); dnDraw(dt); treDraw(); if(!inRun){ const b=$('bSp'); if(b&&b.style.display!=='none') b.style.display='none'; }
   fpsN++; fpsT+=dt; if(fpsT>1){ $('fps').textContent=`${fpsN} fps · ${enemies.length}`; DBG.fps=fpsN;
@@ -2541,7 +2551,7 @@ function clearWorld(){
 }
 function setChar(k){ SV.char=k; player.views=CHARV[k]; player.view=''; player.look(0,1); shadowP.views=CHARV[k]; shadowP.view=''; shadowP.look(0,1);
   lanternL.c.set(CHARS[k].light); lanternL.l.color.set(CHARS[k].light); }
-function enterHub(){ if(S&&S.doom) doomEnd(); if(S) S.down=null; { const b=document.getElementById('downBan'); if(b) b.style.display='none'; try{ player.bb.rotation.z=0; player.mat.opacity=1; }catch(e){} } { const t=$('toast'); if(t) t.style.opacity=0; toastT=0; const db=$('doomBan'); if(db) db.classList.remove('show'); } // v2.19 점검: 필드 알림이 기지까지 남던 것 $('lvbar').classList.remove('show'); if(S) S.lvb=null; clearSpots(); { const e=$('lootB'); if(e) e.style.display='none'; }
+function enterHub(){ if(S&&S.doom) doomEnd(); if(S) S.down=null; { const b=document.getElementById('downBan'); if(b) b.style.display='none'; try{ player.bb.rotation.z=0; player.mat.opacity=1; }catch(e){} } { const t=$('toast'); if(t) t.style.opacity=0; toastT=0; toastQ.length=0; const db=$('doomBan'); if(db) db.classList.remove('show'); } // v2.19 점검: 필드 알림이 기지까지 남던 것 $('lvbar').classList.remove('show'); if(S) S.lvb=null; clearSpots(); { const e=$('lootB'); if(e) e.style.display='none'; }
   if(S&&S.phase==='play') return;
   clearWorld(); setScene(WORLD?'world':'field'); S={phase:'hub',hp:1,maxhp:1}; setChar(SV.char); if(WORLD&&!isLit(SV.region)) SV.region='namsan';
   player.root.position.set(1.3,0,.9); player.look(-.4,1); camT.set(.1,0,.4); keeper.visible=true; hubToad.visible=SV.released>0;
@@ -2568,6 +2578,10 @@ function choiceKeeper(){
 function renderHub(){
   $('hShards').textContent=SV.shards; const C=CHARS[SV.char], R=REGIONS[SV.region];
   $('hChar').textContent=C.short; $('hRegion').textContent=R.name;
+  // v2.35 처음 하는 사람: 첫 판 전엔 「출발」만 → 한 판 뒤 불 키우기·장비·도감·말 → 두 판 뒤 전부
+  const r=SV.runs||0, lv={hUp:1,hGear:1,hDex:1,hTalk:1,hCharB:2,hTree:2,hFlow:2,hMap:2};
+  for(const id in lv){ const e=$(id); if(e) e.style.display=r>=lv[id]?'':'none'; }
+  $('hubInfo').style.display=r>=2?'':'none';
 }
 function startRun(fk){ $('lvbar').classList.remove('show'); clearSpots(); if(typeof fk!=='string') fk=null; if(window.__reseed) window.__reseed();
   sndInit(); $('hub').classList.remove('show'); keeper.visible=false; hubToad.visible=false;
@@ -2581,7 +2595,6 @@ function startRun(fk){ $('lvbar').classList.remove('show'); clearSpots(); if(typ
   else if(WORLD){ S.lastFire=SV.region; S.zoneDone={}; S.fireCd=true; S.distLit=0; refreshSites(); for(const k in SITES) SITES[k].ring.visible=true; fogReveal(P0.x,P0.z,22); }
   renderSlots(); ['hud','slots'].forEach(i=>$(i).style.display=i==='slots'?'flex':'block'); $('btns').style.display='flex';
   $('hint').style.opacity=.85; setTimeout(()=>$('hint').style.opacity=0,4000); last=performance.now();
-  if(S.nb>.05) setTimeout(()=>{ if(S&&S.phase==='play'&&S.t<20) toast(gi('u_fire')+' 불씨 가호','처음 걷는 이를 모닥불이 돕는다 · 강화하면 옅어짐'); },4200);
   toast(R.name,S.carry==='tail'?'지녀 온 꼬리가 혼불이 된다':S.carry==='needle'?'지녀 온 쇠 바늘이 몸을 감싼다':S.heat?'불을 낮췄다 · '+'🔥'.repeat(S.heat):'');
   if(upLv('pclerk')){ joris.push({x:P0.x+1.6,z:P0.z+.4,t:0}); embersItems.push({x:P0.x-1.4,z:P0.z+.6,t:0}); }
   if(upLv('startw')&&!BOT){ const found=Object.keys(WEAPONS).filter(k=>SV.found['w_'+k]&&k!=='shadow'||k===CHARS[SV.char].start); if(found.length>1) openStartPick(found); }
@@ -2715,7 +2728,7 @@ $('hUp').onclick=()=>{ renderUps(); openPanel('pUp'); keeperSay('"조각을 주�
 $('hMap').onclick=()=>{ setMapMode('seoul'); renderMap(); openPanel('pMap'); };
 $('hCharB').onclick=()=>{ renderChars(); openPanel('pChar'); };
 $('hFlow').onclick=()=>{ renderFlow(); openPanel('pFlow'); };
-$('hGo').onclick=()=>{ openPanel(null); const I=starInfo('myeong'); showChoice('어디로 갈까','모닥불 기지에서 갈 곳을 고른다.',{a:`명동 골목 — 지역 필드<br><small>실제 거리 · <span style="color:${I.c}">${'★'.repeat(I.st)} ${I.w}</span> · 보스 뒤 3분 줍기${mpHere('f:myeong')}</small>`,b:`수원 인계동·나혜석거리 — 지역 필드 (새)<br><small>실제 거리 · 넓은 골목 · <span style="color:${I.c}">${'★'.repeat(I.st)} ${I.w}</span>${SV.cleared.suwon?' · 보낸 적 있음':''}${mpHere('f:suwon')}</small>`,c:`서울 이어 걷는 지도 — ${REGIONS[SV.region].name}에서${mpHere('w')?'<br><small>'+mpHere('w').slice(3)+'</small>':''}`},c=>{ if(c==='a') startRun('myeong'); else if(c==='b') startRun('suwon'); else startRun(); },''); };
+$('hGo').onclick=()=>{ openPanel(null); if((SV.runs||0)<2&&!SV.cleared.suwon){ startRun('myeong'); return; } const I=starInfo('myeong'); showChoice('어디로 갈까','모닥불 기지에서 갈 곳을 고른다.',{a:`명동 골목 — 지역 필드<br><small>실제 거리 · <span style="color:${I.c}">${'★'.repeat(I.st)} ${I.w}</span> · 보스 뒤 3분 줍기${mpHere('f:myeong')}</small>`,b:`수원 인계동·나혜석거리 — 지역 필드 (새)<br><small>실제 거리 · 넓은 골목 · <span style="color:${I.c}">${'★'.repeat(I.st)} ${I.w}</span>${SV.cleared.suwon?' · 보낸 적 있음':''}${mpHere('f:suwon')}</small>`,c:`서울 이어 걷는 지도 — ${REGIONS[SV.region].name}에서${mpHere('w')?'<br><small>'+mpHere('w').slice(3)+'</small>':''}`},c=>{ if(c==='a') startRun('myeong'); else if(c==='b') startRun('suwon'); else startRun(); },''); };
 $('hTalk').onclick=()=>keeperSay(keeperLine());
 document.querySelectorAll('.pclose').forEach(b=>b.onclick=()=>openPanel(null));
 let upTab='stat';
