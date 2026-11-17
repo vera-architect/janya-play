@@ -10,7 +10,7 @@
 </script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>잔야(가제) — 1단계 맛보기 v2.33</title>
+<title>잔야(가제) — 1단계 맛보기 v2.34</title>
 <style>
 html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:none;
   font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#ece1cc;
@@ -331,7 +331,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 <div class="ov show" id="title">
   <div style="position:relative;height:170px;width:300px;margin-bottom:6px"><img src="img/gumiho_front.webp" style="position:absolute;right:-10px;top:0;height:150px;opacity:.35;filter:brightness(.6)"><img src="img/player_front.webp" style="position:absolute;left:70px;top:14px;height:156px"></div>
   <h1>잔 야</h1>
-  <div class="sub">(가제) · 1단계 맛보기 v2.33</div>
+  <div class="sub">(가제) · 1단계 맛보기 v2.34</div>
   <div class="who">모닥불 거점 · 서울 지도 · 깨어난 자 셋<br>고르는 대로 갈라지는 밤</div>
   <div class="btn big" id="bStart">눈을 뜬다</div>
   <div class="btn" id="bDex" style="margin-top:12px">도감 · 저승의 것들</div>
@@ -2063,6 +2063,10 @@ auraMesh.rotation.x=-Math.PI/2; auraMesh.position.y=.05; scene.add(auraMesh);
 const auraMesh2=auraMesh.clone(); auraMesh2.material=auraMesh.material.clone(); auraMesh2.material.color.setRGB(.6,.4,1); scene.add(auraMesh2);
 const axeGeo=new THREE.PlaneGeometry(.95,.95), axeMat=new THREE.MeshBasicMaterial({map:T.axe,alphaTest:.5,side:THREE.DoubleSide});
 const AXES=[]; for(let i=0;i<6;i++){ const g=new THREE.Group(); g.rotation.copy(bbFace); const m=new THREE.Mesh(axeGeo,axeMat); g.add(m); g.visible=false; scene.add(g); AXES.push({g,m}); }
+// v2.34 그림자 도끼: 그림자 둘레를 실제로 도는 보랏빛 도끼(전엔 고리만 번쩍여서 「도끼가 안 생긴다」 — 기획자 11-17 16:54)
+const shAxeMat=new THREE.MeshBasicMaterial({map:T.axe,alphaTest:.5,side:THREE.DoubleSide,transparent:true,opacity:.8,color:new THREE.Color(.5,.32,1)});
+const SHAXES=[]; for(let i=0;i<6;i++){ const g=new THREE.Group(); g.rotation.copy(bbFace); const m=new THREE.Mesh(axeGeo,shAxeMat); g.add(m); g.visible=false; scene.add(g); SHAXES.push({g,m}); }
+function shAxesOff(){ for(const A of SHAXES) A.g.visible=false; }
 const beamMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1).translate(.5,0,0),new THREE.MeshBasicMaterial({map:T.line,color:0xff3040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
 beamMesh.rotation.order='YXZ'; beamMesh.visible=false; scene.add(beamMesh);
 const headL=haloSprite(0xfff2c0,1.6,0); scene.add(headL);
@@ -2323,10 +2327,18 @@ function landYut(y,s){ const L=S.W.yut; if(S.fu.patyut) fireBeans(y.tx,y.tz,.8,s
 const SHV=[.72,.5,1];
 function shFx(x,z,R){ fx(x,z,R,SHV,.25); S.shFl=.3; }
 function shadowWeapons(dt,s,P){ DBG.shOn=1; try{ shadowWeapons0(dt,s,P); } finally { DBG.shOn=0; } }
-function shadowWeapons0(dt,s,P){ const sm=shadowMult(); if(!sm||!shadowP.root.visible) return; const W=S.W,E=S.evo,M0=s.might,SP=shadowPos(), s2=Object.assign({},s);
+function shadowWeapons0(dt,s,P){ const sm=shadowMult(); if(!sm||!shadowP.root.visible){ shAxesOff(); return; } const W=S.W,E=S.evo,M0=s.might,SP=shadowPos(), s2=Object.assign({},s);
   const m=k=>{ s2.might=M0*pm(k)*sm; return s2.might; };
   // 소방 도끼: 그림자가 둘레를 한 바퀴 벤다
-  if(W.axe&&ready('sh_axe',dt,E.axe?.7:.9)){ const R=(E.axe?2.3:1.7)*s.area, n=Math.min(6,E.axe?6:[1,2,2,3,4][W.axe-1]); areaHit(SP.x,SP.z,R,(12+5*W.axe)*m('axe')*(E.axe?1.4:1)*(.4+.17*n),null,3); shFx(SP.x,SP.z,R); }
+  // v2.34: 그림자 둘레를 보랏빛 도끼가 실제로 돈다(내 도끼와 같은 수·반경, 반대쪽에서 출발) · 세기는 그림자 몫
+  if(W.axe){ const n=Math.min(6,(E.axe?6:[1,2,2,3,4][W.axe-1])+(br('axe')==='a'?1:0)), R=(E.axe?2.3:1.7)*s.area, D=(12+5*W.axe)*m('axe')*(E.axe?1.4:1)*(W.axe>=3?1.2:1);
+    S.shAxeA=(S.shAxeA||0)+dt*(E.axe?3.6:3.2);
+    for(let i=0;i<SHAXES.length;i++){ const A=SHAXES[i]; if(i>=n){ A.g.visible=false; continue; }
+      const a=S.shAxeA+Math.PI+i/n*6.28, x=SP.x+Math.cos(a)*R, z=SP.z+Math.sin(a)*R*.85; A.g.visible=true; A.g.position.set(x,.55,z); A.m.rotation.z=-S.shAxeA*5; A.g.scale.setScalar(E.axe?1.25:1);
+      near(x,z,.75,e=>{ const dd=Math.hypot(e.x-x,e.z-z); if(dd>.55+e.d.r) return; const last=e.hitCd.get(A)||0; if(S.t-last<.4) return; e.hitCd.set(A,S.t);
+        const kx=e.x-SP.x,kz=e.z-SP.z,kl=Math.hypot(kx,kz)||1; damage(e,D,kx/kl,kz/kl,3); S.shFl=.15; });
+      if(boss.alive&&Math.hypot(boss.x-x,boss.z-z)<1.3){ boss.shAxeHit=boss.shAxeHit||[]; const last=boss.shAxeHit[i]||0; if(S.t-last>.4){ boss.shAxeHit[i]=S.t; damageBoss(D,'shaxe'); } } } }
+  else shAxesOff();
   // 물줄기: 가까운 괴수 쪽으로 짧게 뿜는다
   if(W.hose&&ready('sh_hose',dt,(E.hose?1.2:2.1-.17*W.hose)*s.cd)){ const f=aimFrom(SP.x,SP.z), R=(3+.4*W.hose)*s.area, dmg=(22+11*W.hose)*m('hose')*.12;
     near(SP.x+f.x*R*.5,SP.z+f.z*R*.5,R*.6,e=>{ const ex=e.x-SP.x,ez=e.z-SP.z,d=Math.hypot(ex,ez)||1; if(d>R+e.d.r) return; if((ex*f.x+ez*f.z)/d<.75) return; damage(e,dmg,f.x,f.z,4); });
@@ -3710,7 +3722,7 @@ function arrows(){
 function clearWorld(){
   enemies.length=0; CORPSE.length=0; gems.length=0; embersItems.length=0; joris.length=0; orbs.length=0; foxShots.length=0; salts.length=0; beans.length=0; puddles.length=0; fxs.length=0;
   boss.alive=false; boss.root.visible=false; bossL.on=false; bossL.l.intensity=0; teleMesh.visible=false; slamRing.visible=false; beamMesh.visible=false; fallenNPC.visible=false;
-  AXES.forEach(a=>a.g.visible=false); auraMesh.visible=false; auraMesh2.visible=false; shadowP.root.visible=false; shadowP.root.scale.setScalar(1); headL.material.opacity=0;
+  AXES.forEach(a=>a.g.visible=false); shAxesOff(); auraMesh.visible=false; auraMesh2.visible=false; shadowP.root.visible=false; shadowP.root.scale.setScalar(1); headL.material.opacity=0;
   $('boss').style.display='none';
 }
 function setChar(k){ SV.char=k; player.views=CHARV[k]; player.view=''; player.look(0,1); shadowP.views=CHARV[k]; shadowP.view=''; shadowP.look(0,1);
