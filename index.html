@@ -10,7 +10,7 @@
 </script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>잔야(가제) — 1단계 맛보기 v2.31</title>
+<title>잔야(가제) — 1단계 맛보기 v2.32</title>
 <style>
 html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:none;
   font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#ece1cc;
@@ -322,7 +322,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 <div class="ov show" id="title">
   <div style="position:relative;height:170px;width:300px;margin-bottom:6px"><img src="img/gumiho_front.webp" style="position:absolute;right:-10px;top:0;height:150px;opacity:.35;filter:brightness(.6)"><img src="img/player_front.webp" style="position:absolute;left:70px;top:14px;height:156px"></div>
   <h1>잔 야</h1>
-  <div class="sub">(가제) · 1단계 맛보기 v2.31</div>
+  <div class="sub">(가제) · 1단계 맛보기 v2.32</div>
   <div class="who">모닥불 거점 · 서울 지도 · 깨어난 자 셋<br>고르는 대로 갈라지는 밤</div>
   <div class="btn big" id="bStart">눈을 뜬다</div>
   <div class="btn" id="bDex" style="margin-top:12px">도감 · 저승의 것들</div>
@@ -379,6 +379,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
   <div id="pRet"></div>
   <div class="row2"><div class="btn" id="bQuit">🔥 모닥불로 돌아가기</div></div>
   <div class="btn" id="bVib" style="margin-top:14px;font-size:12px">📳 진동 켜짐</div>
+  <div class="btn" id="bBgm" style="margin-top:8px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:8px">🎵 음악 <input type="range" id="bgmR" min="0" max="100" step="5" style="width:110px;accent-color:#f4b740"> <span id="bgmT" style="min-width:34px;text-align:left"></span></div>
   <div class="btn" id="bSlot" style="margin-top:8px;font-size:12px">↔ 좌우: 스킬칸 오른쪽 · 고르기 왼쪽</div>
   <div class="btn" id="bLvM" style="margin-top:8px;font-size:12px">🔥 레벨업: 모닥불에서 몰아 고르기</div>
   <div class="btn" id="bTune" style="margin-top:8px;font-size:12px">🎛 조정 (시험용 값 바꾸기)</div>
@@ -1323,9 +1324,9 @@ const BOSSDEF={
   // v2.3 도깨비: 옛 설화의 도깨비(외다리로 깡충, 도깨비불, 장난, 방망이). 뿔·가시 방망이 없음(02 규칙 8)
   dokkaebi:{name:'도깨비',hp:4200,H:3.5,views:{front:['img/dok_front.webp',531,545],side:['img/dok_side.webp',531,545],back:['img/dok_back.webp',531,545],atk:['img/dok_atk.webp',513,640,1.22]},col:0x6ab0ff,shot:[.4,.65,1],line:'깡충, 깡충. 외다리 발소리가 골목을 울린다',bye:'도깨비를 보냈다',left:'닳은 방망이 조각'},
   // v2.16 이무기: 용이 되지 못한 큰 뱀(옛 설화). 물속으로 숨었다 솟구치고, 꼬리로 휩쓸고, 물을 뿜는다. 다리·뿔 없음
-  imugi:{name:'이무기',hp:3600,H:3.9,views:{front:['img/imugi.webp',673,640]},col:0x6aa8ff,shot:[.45,.75,1],line:'물비린내가 짙어진다 · 천 년을 기다린 것이 고개를 든다',bye:'이무기를 보냈다',left:'젖은 비늘 한 장'}, // 한강 몫으로 아껴 둠(기획자 11-14 ㄴ)
+  imugi:{name:'이무기',hp:3600,H:3.9,views:{front:['img/imugi.webp',673,640],atk:['img/imugi_rise.webp',543,565,1.15]},col:0x6aa8ff,shot:[.45,.75,1],line:'물비린내가 짙어진다 · 천 년을 기다린 것이 고개를 든다',bye:'이무기를 보냈다',left:'젖은 비늘 한 장'}, // 한강 몫으로 아껴 둠(기획자 11-14 ㄴ)
   // v2.16b 호랑이: 해와 달이 된 오누이의 호랑이(옛이야기). 빙빙 돌며 노리다 할퀴고, 덮치고, 포효로 발을 굳히고, 어둠에 숨어 뒤에서 덮친다 = 수원 파이널
-  tiger:{name:'호랑이',hp:3400,H:2.5,views:{front:['img/tiger.webp',751,405],atk:['img/tiger_atk.webp',756,396,1.05]},col:0xffb050,shot:[1,.75,.35],line:'풀숲이 낮게 흔들린다 · 무언가 너를 빙빙 돌며 본다',bye:'호랑이를 보냈다',left:'굵은 범 수염'}
+  tiger:{name:'호랑이',hp:3400,H:2.5,views:{front:['img/tiger_front.webp',515,526,1.2],side:['img/tiger.webp',751,405],back:['img/tiger_back.webp',521,556,1.2],atk:['img/tiger_atk.webp',756,396,1.05]},col:0xffb050,shot:[1,.75,.35],line:'풀숲이 낮게 흔들린다 · 무언가 너를 빙빙 돌며 본다',bye:'호랑이를 보냈다',left:'굵은 범 수염'}
 };
 
 /* ============ 렌더러 / 카메라 ============ */
@@ -1788,7 +1789,7 @@ function doomStart(){ const P=player.root.position; S.doom={t:0,dur:9,x:P.x,z:P.
 function doomTick(dt,P){ const D=S.doom; D.t+=dt; const k=Math.min(1,D.t/2.2);
   // 뒤에서 다가온다: 처음엔 멀리(화면 위쪽), 점점 플레이어 쪽으로
   const tx=P.x, tz=P.z-.3, sp=(2.5+D.t*1.6)*dt; const dx=tx-D.x, dz=tz-D.z, l=Math.hypot(dx,dz)||1; if(l>.3){ D.x+=dx/l*Math.min(l,sp); D.z+=dz/l*Math.min(l,sp); }
-  const H=7+5.5*k, W=H*617/640, wob=1+Math.sin(D.t*2.3)*.03; // v2.15c 전용 그림(제미나이 「이름 없는 그것」 617×640)
+  const H=7+5.5*k, W=H*539/570, wob=1+Math.sin(D.t*2.3)*.03; // v2.32 다시 뽑음(촉수 안 잘림) 539×570
   const eo=Math.max(0,Math.min(1,(D.t-1.3)/.35)); if(eo>0&&!D.eyes){ D.eyes=1; DBG.shake=Math.max(DBG.shake||0,1.1); buzz(160); try{ sfx.roar(); }catch(e){} } // 큰 눈은 마지막에 번쩍 뜬다
   doomS.position.set(D.x,0,D.z); doomS.scale.set(W*wob,H,1); doomS.material.opacity=.92*k;
   doomE.position.set(D.x,0,D.z+.05); doomE.scale.set(W*wob,H,1); doomE.material.opacity=eo*(.8+.2*Math.sin(D.t*5));
@@ -2074,6 +2075,33 @@ $('bSnd').onclick=()=>{ SND.on=!SND.on; if(SND.master) SND.master.gain.value=SND
 function buzz(ms){ if(SV.vib===false||BOT) return; try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 const vibUi=()=>{ $('bVib').textContent=SV.vib===false?'📳 진동 꺼짐':'📳 진동 켜짐'; $('bVib').style.opacity=SV.vib===false?.55:1; }; vibUi();
 $('bVib').onclick=()=>{ SV.vib=SV.vib===false; save(); vibUi(); if(SV.vib) buzz(60); };
+/* v2.32 배경음악 (기획자 11-17 09:39 「각 국가의 특색과 분위기에 맞게」 · 프롬프트는 47번 문서)
+   장면 6개: 기지 · 필드 · 중간보스 · 파이널 · 쟁탈(불씨·그것) · 판 끝. 곡 파일(bgm/*.mp3)이 없으면 조용히 넘어간다.
+   SND.master 아래에 물려서 🔊 끄기·통화 중 작게(callDuck)를 그대로 따른다. 장면이 바뀌면 2초 겹쳐 넘긴다. */
+const BGM={files:{base:'bgm/bgm_base.mp3',field:'bgm/bgm_field.mp3',mid:'bgm/bgm_mid.mp3',final:'bgm/bgm_final.mp3',clash:'bgm/bgm_clash.mp3',end:'bgm/bgm_end.mp3'},
+  buf:{},miss:{},loading:{},cur:'',want:'',src:null,g:null,bus:null,tk:0,log:[]};
+const bgmVol=()=>SV.bgm==null?.55:SV.bgm;
+function bgmBus(){ if(!SND.ctx||!SND.master) return null; if(!BGM.bus){ BGM.bus=SND.ctx.createGain(); BGM.bus.gain.value=bgmVol(); BGM.bus.connect(SND.master); } return BGM.bus; }
+async function bgmLoad(k){ if(BGM.buf[k]||BGM.miss[k]||BGM.loading[k]||!SND.ctx) return; BGM.loading[k]=1;
+  try{ const r=await fetch(BGM.files[k]); if(!r.ok) throw new Error(r.status); const a=await r.arrayBuffer(); BGM.buf[k]=await new Promise((ok,no)=>SND.ctx.decodeAudioData(a,ok,no)); }
+  catch(e){ BGM.miss[k]=1; } BGM.loading[k]=0; bgmUi(); }
+function bgmFade(g,t,to,dur){ try{ g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value,t); g.gain.linearRampToValueAtTime(to,t+dur); }catch(e){} }
+function bgmPlay(k){ const bus=bgmBus(); if(!bus) return; BGM.want=k; if(BGM.cur===k) return;
+  if(!BGM.buf[k]&&!BGM.miss[k]){ bgmLoad(k); return; } // 받는 동안은 앞 곡을 이어 튼다
+  const c=SND.ctx, t=c.currentTime, X=k==='end'?.25:2;
+  if(BGM.src){ const o=BGM.src, og=BGM.g; bgmFade(og,t,0,X); try{ o.stop(t+X+.1); }catch(e){} BGM.src=null; BGM.g=null; }
+  BGM.cur=k; BGM.log.push(k); if(BGM.log.length>30) BGM.log.shift(); if(!BGM.buf[k]) return; // 곡 없음 → 조용히
+  const s=c.createBufferSource(); s.buffer=BGM.buf[k]; s.loop=k!=='end'; const g=c.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(k==='end'?1:.9,t+X);
+  s.connect(g); g.connect(bus); s.start(t); BGM.src=s; BGM.g=g; }
+function bgmScene(){ if(!S||S.phase==='hub') return 'base'; if(S.phase==='over') return 'end';
+  if(S.doom||S.fLoot>0||(S.emG&&S.emG.length)) return 'clash';
+  if(boss.alive&&!boss.dying){ const fin=S.field?S.bossKey===FIELDS[S.field]?.boss:!WORLD; return fin?'final':'mid'; }
+  return 'field'; }
+function bgmTick(dt){ if(!SND.ctx) return; BGM.tk-=dt; if(BGM.tk>0) return; BGM.tk=.5; bgmPlay(bgmScene()); }
+function bgmUi(){ const r=$('bgmR'), t=$('bgmT'); if(!r) return; const v=Math.round(bgmVol()*100); r.value=v; const none=!Object.keys(BGM.buf).length&&Object.keys(BGM.miss).length>0;
+  t.textContent=none?`${v}% · 곡 아직 없음`:`${v}%`; }
+if($('bgmR')){ $('bgmR').oninput=e=>{ SV.bgm=(+e.target.value)/100; if(BGM.bus) BGM.bus.gain.value=SV.bgm; bgmUi(); }; $('bgmR').onchange=()=>save(); bgmUi(); }
+DBG.bgm=BGM; DBG.bgmScene=bgmScene;
 // v2.9.2 기획자 평: 스킬칸이 아래면 조이스틱과 겹친다 → 오른쪽(기본)·왼쪽·아래 고르기 / 레벨업은 모닥불에서 몰아 고르기(기본)·바로
 // v2.9.2b 기획자 평: 스킬칸은 오른쪽 · 고르기 카드는 왼쪽 · 아래는 비움. 좌우 바꾸기는 멈춤 화면에서 (SV.flip)
 function slotUi(){ const f=!!SV.flip, el=$('slots'); el.classList.toggle('sR',!f); el.classList.toggle('sL',f); $('lvbar').classList.toggle('R',f); $('lvBadge').classList.toggle('R',f); $('bSlot').textContent=f?'↔ 좌우: 스킬칸 왼쪽 · 고르기 오른쪽':'↔ 좌우: 스킬칸 오른쪽 · 고르기 왼쪽'; }
@@ -4326,6 +4354,7 @@ function tick(now){
   else if(S&&S.phase==='over'&&boss.alive) bossUpdate(dt);
   else if(!S||S.phase==='hub'){ player.update(dt,0); }
   try{ mpTick(dt); }catch(e){}
+  try{ bgmTick(dt); }catch(e){}
   if(DBG.fixed&&S&&S.phase==='play') draw(DBG.fixed/30,S.t); else draw(dt,t);
   requestAnimationFrame(tick);
 }

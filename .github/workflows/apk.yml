@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['index.html', 'img/**', 'app/**', '.github/workflows/apk.yml']
+    paths: ['index.html', 'img/**', 'bgm/**', 'app/**', '.github/workflows/apk.yml']
 permissions:
   contents: write
 jobs:
@@ -22,6 +22,7 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           mkdir -p www && cp ../index.html www/ && cp -r ../img www/
+          if [ -d ../bgm ]; then cp -r ../bgm www/; fi
           npx cap sync android
       - name: APK 굽기
         working-directory: app/android
