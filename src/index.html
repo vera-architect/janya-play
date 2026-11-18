@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>잔야(가제) — 1단계 맛보기 v2.35</title>
+<title>잔야(가제) — 1단계 맛보기 v2.46</title>
 <style>
 html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:none;
   font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#ece1cc;
@@ -21,11 +21,11 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 #row{display:flex;align-items:center;gap:10px;padding:6px 10px 0}
 #lv{font-weight:800;color:#33dcc8;font-size:14px}
 #time{flex:1;text-align:center;font-weight:800;font-size:18px;letter-spacing:1px}
-#kills{font-size:12px;opacity:.85;margin-left:8px}
+#kills{font-size:11px;opacity:.75;min-width:44px;text-align:right}
 #hpw{padding:6px 10px 0;display:flex;align-items:center;gap:6px}
-#hpb{width:150px;height:12px;border:2px solid #140d14;border-radius:6px;background:#2a1418;overflow:hidden;box-shadow:0 2px 0 #000}
+#hpb{position:relative;width:150px;height:14px;border:2px solid #140d14;border-radius:7px;background:#2a1418;overflow:hidden;box-shadow:0 2px 0 #000}
 #hpf{height:100%;width:100%;background:linear-gradient(#ff6a74,#d02a40);transition:width .1s}
-#hpt{font-size:11px;opacity:.8}
+#hpt{position:absolute;left:0;right:0;top:0;line-height:14px;text-align:center;font-size:10px;font-weight:800;color:#fff;text-shadow:0 1px 1px #000;opacity:.95}
 #boss{position:fixed;left:50%;top:66px;transform:translateX(-50%);width:min(calc(100vw - 124px),420px);display:none;pointer-events:none;text-align:center}
 #boss b{font-size:14px;color:#ff8a94;letter-spacing:2px}
 #bossb{height:12px;margin-top:3px;border:2px solid #140d14;border-radius:6px;background:#2a1418;overflow:hidden}
@@ -302,14 +302,14 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 <div id="hurt"></div>
 <div id="hud" class="ts">
   <div id="xpb"><div id="xpf"></div></div>
-  <div id="row"><div id="lv">Lv 1</div><div id="time">00:00</div><div style="width:96px"></div></div>
+  <div id="row"><div id="lv">Lv 1</div><div id="time">00:00</div><div id="kills">처치 0</div><div style="width:74px"></div></div>
   <div id="spLeft"></div>
-  <div id="hpw"><div id="hpb"><div id="hpf"></div></div><div id="hpt">100</div><div id="kills">처치 0</div><div id="mpN" style="display:none;margin-left:8px;font-size:12px;font-weight:800;color:#5ad0ff"></div></div>
+  <div id="hpw"><div id="hpb"><div id="hpf"></div><div id="hpt">100</div></div><div id="mpN" style="display:none;margin-left:8px;font-size:12px;font-weight:800;color:#5ad0ff"></div></div>
 </div>
 <div id="boss" class="ts"><b id="bossn">구미호</b><div id="bossb"><div id="bossf"></div></div></div>
 <div id="slots" class="ts"></div>
 <div id="lvBadge"><span>⬆ 1</span><small>성장 고르기</small></div>
-<div id="btns"><div class="btn" id="bSnd" style="padding-left:9px;padding-right:9px">🔊</div><div class="btn" id="bPause" style="position:relative">☰ 메뉴<span id="bOn" style="display:none"></span></div></div>
+<div id="btns"><div class="btn" id="bPause" style="position:relative">☰ 메뉴<span id="bOn" style="display:none"></span></div></div>
 <div id="joy"><div id="knob"></div></div>
 <div id="toast" class="ts"></div>
 <div id="memory" class="ts"></div>
@@ -324,7 +324,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 <div class="ov show" id="title">
   <div style="position:relative;height:170px;width:300px;margin-bottom:6px"><img src="img/gumiho_front.webp" style="position:absolute;right:-10px;top:0;height:150px;opacity:.35;filter:brightness(.6)"><img src="img/player_front.webp" style="position:absolute;left:70px;top:14px;height:156px"></div>
   <h1>잔 야</h1>
-  <div class="sub">(가제) · 1단계 맛보기 v2.35</div>
+  <div class="sub">(가제) · 1단계 맛보기 v2.46</div>
   <div class="who">모닥불 거점 · 서울 지도 · 깨어난 자 셋<br>고르는 대로 갈라지는 밤</div>
   <div class="btn big" id="bStart">눈을 뜬다</div>
   <div class="btn" id="bDex" style="margin-top:12px">도감 · 저승의 것들</div>
@@ -380,7 +380,8 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
   <div class="stat" id="pstat"></div>
   <div id="pRet"></div>
   <div class="row2"><div class="btn" id="bQuit">🔥 모닥불로 돌아가기</div></div>
-  <div class="btn" id="bVib" style="margin-top:14px;font-size:12px">📳 진동 켜짐</div>
+  <div class="btn" id="bSnd" style="margin-top:14px;font-size:12px">🔊 소리 켜짐</div>
+  <div class="btn" id="bVib" style="margin-top:8px;font-size:12px">📳 진동 켜짐</div>
   <div class="btn" id="bBgm" style="margin-top:8px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:8px">🎵 음악 <input type="range" id="bgmR" min="0" max="100" step="5" style="width:110px;accent-color:#f4b740"> <span id="bgmT" style="min-width:34px;text-align:left"></span></div>
   <div class="btn" id="bSlot" style="margin-top:8px;font-size:12px">↔ 좌우: 스킬칸 오른쪽 · 고르기 왼쪽</div>
   <div class="btn" id="bLvM" style="margin-top:8px;font-size:12px">🔥 레벨업: 모닥불에서 몰아 고르기</div>
