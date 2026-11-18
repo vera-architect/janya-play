@@ -1689,7 +1689,7 @@ function director(dt){
 
 /* ============ 보스 ============ */
 function spawnBoss(){
-  S.bossSpawned=true; const P=player.root.position; const a=rr(0,6.28); const B=BOSSDEF[S.bossKey]; boss.def=B; boss.view=''; bossLook(0,1);
+  S.bossSpawned=true; boss.fzImm=0; boss.freeze=0; const P=player.root.position; const a=rr(0,6.28); const B=BOSSDEF[S.bossKey]; boss.def=B; boss.view=''; bossLook(0,1);
   const ZB=FIELD&&S.bossZid!=null?zoneById(S.bossZid):null, HM=ZB?(ZB.mid?MID_HP:FIN_HP):1;
   Object.assign(boss,{zid:ZB?ZB.id:null,hop:0,alive:true,hp:B.hp*HM*TU('bhp'),maxhp:B.hp*HM*TU('bhp'),x:P.x+Math.cos(a)*11,z:P.z+Math.sin(a)*11,state:'walk',st:0,shotT:2.5,dashT:6,ringT:7,slamT:4,summonA:false,summonB:false,dx:0,dz:0,flash:0,orbit:0,dying:0,ateIron:false,axeHit:[],cw:Math.random()<.5?1:-1,clawT:3,pounceT:6,roarT:9,shadeT:12,pose:false,chain:0,chainN:0,hops:0,after:0,wave:0,rose:0});
   boss.root.visible=true; boss.root.scale.setScalar(1); boss.mat.opacity=1; boss.mat.transparent=false; bossL.c.set(B.col); bossL.l.color.set(B.col); boss.halo.material.color.set(B.col); bossL.on=true;
@@ -1718,7 +1718,7 @@ function bossUpdate0(dt){
     if(Math.random()<.6) burst(boss.x+rr(-1,1),rr(.5,2.5),boss.z+rr(-.5,.5),3,3);
     if(boss.dying<=0){ boss.alive=false; boss.root.visible=false; bossL.on=false; bossL.l.intensity=0; slamRing.visible=false; bossDefeated(); } return; }
   boss.st+=dt; boss.flash=Math.max(0,boss.flash-dt*6); boss.orbit+=dt*2;
-  const hpR=boss.hp/boss.maxhp, fz=boss.freeze>0; if(fz){ boss.freeze-=dt; }
+  const hpR=boss.hp/boss.maxhp, fz=boss.freeze>0; if(fz){ boss.freeze-=dt; } if(boss.fzImm>0) boss.fzImm-=dt;
   if(!boss.summonA&&hpR<.7){ boss.summonA=true; summonRing(14); sfx.roar(); }
   if(!boss.summonB&&hpR<.35){ boss.summonB=true; summonRing(20); sfx.roar(); }
   if(S.bossKey==='imugi'){ imugiUpdate(dt,P,dx,dz,d,hpR,fz); }
@@ -1857,7 +1857,7 @@ function tigerUpdate(dt,P,dx,dz,d,hpR,fz){ const F=hpR<.5?1.25:1;
 function summonRing(n){ const P=player.root.position; for(let i=0;i<n;i++){ const a=i/n*6.28; spawn(i%2?'wisp':'shade',P.x+Math.cos(a)*7,P.z+Math.sin(a)*7); } }
 function shot(x,z,a,spd,wait=.38){ foxShots.push({x,z,y:1.3,vx:Math.cos(a)*spd,vz:Math.sin(a)*spd,life:3.5,wait}); sfx.shot(); }
 function damageBoss(n,src){
-  if(!boss.alive||boss.dying>0||(S.inSafe&&src!=='dbg')) return; if(boss.freeze>0) n*=1.5; if(S.fb) n*=S.fb.boss;
+  if(!boss.alive||boss.dying>0||(S.inSafe&&src!=='dbg')) return; if(boss.freeze>0) n*=1.25; if(S.fb) n*=S.fb.boss;
   if(S.bossKey==='bulgasari'&&src==='axe'){ boss.hp=Math.min(boss.maxhp,boss.hp+n*.3); boss.flash=.5; if(!boss.ateIron){ boss.ateIron=true; toast('쇠를 먹었다','불가사리는 도끼를 씹어 삼킨다'); sfx.ironChew(); } return; }
   boss.hp-=n; boss.flash=1; if(boss.zid!=null) MPF.bdmg[boss.zid]=(MPF.bdmg[boss.zid]||0)+n;
   boss.dnA=(boss.dnA||0)+n; if(S.t-(boss.dnT??-9)>.55){ boss.dnT=S.t; const v=Math.round(boss.dnA); boss.dnA=0; if(v>=1) dnum(boss.x,(boss.def?boss.def.H:3)*.8,boss.z,v,v>=80?'big boss':'mid boss'); if(v>=80) HS=Math.max(HS,.05); }
@@ -2069,7 +2069,7 @@ function weapons(dt){
   s.might=M0*pm('flute');
   if(W.flute&&ready('flute',dt,(11-.8*W.flute-(W.flute>=5?1.5:0))*s.cd)){ const dur=(1+.25*W.flute+(W.flute>=4?.3:0))*s.dur*(E.flute?2:1), R=spawnR(); evoEv('flute',P.x,P.z,R);
     for(const e of enemies){ if(Math.hypot(e.x-P.x,e.z-P.z)<R) e.freeze=Math.max(e.freeze,dur); }
-    if(boss.alive&&Math.hypot(boss.x-P.x,boss.z-P.z)<R) boss.freeze=dur*.4;
+    if(boss.alive&&Math.hypot(boss.x-P.x,boss.z-P.z)<R&&!(boss.fzImm>0)){ boss.freeze=Math.min(1.2,dur*.25); boss.fzImm=boss.freeze+5; } // v2.47 보스는 최대 1.2초만 멈추고, 풀린 뒤 5초는 안 멈춤(각성하면 보스가 거의 계속 멈춰 있던 것)
     if(br('flute')==='a') near(P.x,P.z,R*.5,e=>{ const dx=e.x-P.x,dz=e.z-P.z,l=Math.hypot(dx,dz)||1; e.kx+=dx/l*10; e.kz+=dz/l*10; }); if(br('flute')==='b') S.hp=Math.min(S.maxhp,S.hp+S.maxhp*.08);
     fx(P.x,P.z,R*.8,[.5,.8,1],.6); sfx.flute(); }
   // 도깨비 방망이
@@ -2624,6 +2624,7 @@ function draw(dt,t){
   player.body.visible=!(inRun&&S&&S.iframe>0&&Math.floor(t*22)%2===0);
   if(S&&S.lg>0){ S.lg=Math.max(0,S.lg-dt*5); const k=Math.sin(S.lg*Math.PI)*.2; player.bb.position.set(S.face.x*k,0,S.face.z*k); } else player.bb.position.set(0,0,0);
   footDot.visible=inRun; if(inRun){ footDot.position.set(P.x,.035,P.z); footDot.material.opacity=.55+.25*Math.sin(t*6); } xraySync();
+  if(!S||S.phase==='hub'||S.phase==='over'){ const lb=$('lvBadge'); if(lb&&lb.style.display!=='none') lb.style.display='none'; } // v2.47 판이 끝나면 「성장 고르기」 표시를 지움(남은 성장은 그 판에서만 쓰임)
   { const hb=!S||S.phase==='hub'; if(HUBD.on!==hb){ HUBD.on=hb; HUBD.g.visible=hb; const N=SITES.namsan; N.beam.visible=N.beam2.visible=!hb; N.disc.visible=!hb&&isLit('namsan'); fireHalo.scale.setScalar(hb?2.2:4.2); } } // v2.46 거점에선 빛기둥·밝은 둘레를 끄고 밤 거리로
   if(keeper.visible){ lightAt(keeper.position.x,keeper.position.z,tint); keeper.userData.m.material.color.setRGB(Math.min(1,.5+tint.r*.45),Math.min(1,.5+tint.g*.45),Math.min(1,.56+tint.b*.45)); // v2.44: 새 그림엔 불빛이 이미 그려져 있어 덜 물들임 keeper.userData.m.position.y=0;
     // 움직임: 숨쉬기(몸이 살짝 부풀고) · 천천히 몸 흔들기 · 4~8초마다 불을 쑤시면 불티가 오른다
