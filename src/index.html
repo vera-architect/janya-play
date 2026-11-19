@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Nanum+Brush+Script&family=Noto+Serif+KR:wght@700&display=swap">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>잔야(가제) — 1단계 맛보기 v2.67</title>
+<title>잔야(가제) — 1단계 맛보기 v2.68</title>
 <style>
 html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:none;
   font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#ece1cc;
@@ -37,6 +37,10 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
 #slots.sL{left:6px;align-items:flex-start}
 #lvBadge{position:fixed;left:8px;top:112px;z-index:3;display:none;flex-direction:column;align-items:center;padding:5px 9px 4px;border-radius:12px;border:2.5px solid #140d14;background:#0f6a64;color:#fff;font-weight:800;font-size:15px;box-shadow:0 0 10px #33dcc8,0 3px 0 #140d14;cursor:pointer;touch-action:none;animation:spPulse 1.2s ease-in-out infinite}
 #lvBadge.R{left:auto;right:8px}
+#lvBadge.fire{background:linear-gradient(#ff9a30,#c8380c);box-shadow:0 0 14px #ff8a20,0 0 28px #ff5a10,0 3px 0 #140d14;animation:lvFire .7s ease-in-out infinite alternate}
+#lvBadge.fire::after{content:'🔥';position:absolute;top:-15px;font-size:16px;animation:lvFire .45s ease-in-out infinite alternate}
+@keyframes lvFire{from{transform:scale(1);filter:brightness(1)}to{transform:scale(1.12);filter:brightness(1.35)}}
+.ov.live{background:rgba(7,6,12,.5)}
 #lvBadge small{font-size:9.5px;font-weight:700;opacity:.9}
 .slot{font-size:11px;padding:3px 6px;border-radius:8px;border:2px solid #140d14;background:rgba(46,43,82,.85)}
 .slot.p{background:rgba(26,24,50,.85);opacity:.9}
