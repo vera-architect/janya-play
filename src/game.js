@@ -3494,7 +3494,7 @@ function keeperLine(){
 #epWin h3{margin:0 0 4px;color:#f4b740;font-size:17px;letter-spacing:.04em}#epWin .who{font-size:11.5px;opacity:.6;margin-bottom:14px}
 #epWin .ln{font-size:15.5px;line-height:1.85;margin:6px 0;opacity:0;transition:opacity .5s}#epWin .ln.on{opacity:1}#epWin .end{margin-top:16px;font-size:13px;line-height:1.6;color:#b9a98c;font-style:italic;opacity:0;transition:opacity .8s}#epWin .end.on{opacity:1}
 #epWin .tap{position:absolute;right:14px;bottom:8px;font-size:11px;opacity:.45}
-#pEps .epi{background:rgba(255,255,255,.05);border:2px solid #140d14;border-radius:10px;padding:10px 12px;margin:6px 0;text-align:left;cursor:pointer}#pEps .epi b{color:#f4b740}#pEps .epi small{display:block;opacity:.65;margin-top:3px}#pEps .lock{opacity:.4;cursor:default}
+#pEps .epi{background:rgba(255,255,255,.05);border:2px solid #140d14;border-radius:10px;padding:10px 12px;margin:6px 0;text-align:left;cursor:pointer}#pEps .epi b{color:#f4b740}#pEps .epi small{display:block;opacity:.65;margin-top:3px}#pEps .lock{opacity:.4;cursor:default}#pEps .npl{margin-top:6px;border-top:1px solid rgba(255,255,255,.1);padding-top:4px}#pEps .npl p{margin:5px 0;font-size:12.5px;line-height:1.5;opacity:.9}#pEps .npl i{display:inline-block;width:16px;color:#f4b740;font-style:normal;font-weight:800}
 #epNext{width:min(94vw,440px);margin:-4px 0 8px;padding:7px 10px;border-radius:10px;background:rgba(244,183,64,.12);border:2px solid rgba(244,183,64,.45);color:#ffd98a;font-size:13.5px;font-weight:700;text-align:center;cursor:pointer}`; document.head.appendChild(st);
   const w=document.createElement('div'); w.id='epWin'; w.innerHTML='<div class="pg"><h3></h3><div class="who">모닥불지기</div><div class="bd"></div><div class="tap">눌러서 넘기기</div></div>'; document.body.appendChild(w); }
 let EPW=null;
@@ -3504,14 +3504,19 @@ function epWin(i,isNew){ const E=EPS[i]; if(!E) return; const w=$('epWin'), pg=w
   const close=()=>{ w.classList.remove('show'); w.onclick=null; EPW=null; if(isNew){ SV.epNew=0; save(); } if(S&&S.phase==='hub'){ keeperSay(keeperLine()); renderEpNext(); } };
   EPW={i}; w.classList.add('show'); step(); w.onclick=step; DBG.epWin=(DBG.epWin||0)+1; }
 function renderEpNext(){ let el=$('epNext'); if(!el){ el=document.createElement('div'); el.id='epNext'; hubBars().prepend(el); el.onclick=()=>epList(); }
-  el.innerHTML=epNextTxt()+((SV.ep||0)?' <small style="opacity:.7;font-weight:400">· 📜 지난 이야기</small>':''); }
+  el.innerHTML=epNextTxt()+((SV.ep||0)||npcHeard().length?' <small style="opacity:.7;font-weight:400">· 📜 지난 이야기</small>':''); }
 function epList(){ let p=$('pEps'); if(!p){ p=document.createElement('div'); p.className='panel'; p.id='pEps'; p.innerHTML='<h2>📜 지난 이야기</h2><div class="sub2">모닥불 옆에서 들은 이야기 · 눌러서 다시 읽기</div><div class="pw" id="epsList"></div><div class="btn big" id="epsX" style="margin-top:10px">닫기</div>'; document.body.appendChild(p); $('epsX').onclick=()=>p.classList.remove('show'); }
   const e=SV.ep||0; $('epsList').innerHTML=EPS.map((E,i)=>i<e?`<div class="epi" data-i="${i}"><b>${E.t}</b><small>${E.L[0]}</small></div>`:`<div class="epi lock"><b>${i+1}화 · ???</b><small>${i===e?epNextTxt():'아직 듣지 못했다'}</small></div>`).join('')+(e>=EPS.length?'<div class="epi lock"><b>다음 이야기는 준비 중</b></div>':'');
+  // v2.63 (기획자 11-19 13:49 「ㄴ」): 모닥불 곁 사람들 — 들은 이야기만 다시 읽기(1·2막 화면에 이미 나온 줄만)
+  { const H=npcHeard(), D=NPCD(); if(H.length) $('epsList').innerHTML+=`<div class="sub2" style="margin-top:12px">🔥 모닥불 곁 사람들 · 눌러서 들은 이야기 보기</div>`+H.map(N=>{ const h=Math.min(5,D.h[N.k]||0), gone=D.gone.includes(N.k);
+      return `<div class="epi npi" data-k="${N.k}"><b>${N.n} · ${N.j} <span style="letter-spacing:1px;opacity:.8">${'●'.repeat(h)}${'○'.repeat(5-h)}</span></b><small>${gone?`🕯 ${N.it} · 먼저 갔다`:`이야기 ${h}/5`}</small><div class="npl" style="display:none">${N.L.slice(0,h).map((t,i)=>`<p><i>${i+1}</i> "${t}"</p>`).join('')}</div></div>`; }).join(''); }
+  $('epsList').querySelectorAll('.npi').forEach(d=>d.onclick=()=>{ const l=d.querySelector('.npl'); l.style.display=l.style.display==='none'?'block':'none'; });
   $('epsList').querySelectorAll('.epi[data-i]').forEach(d=>d.onclick=()=>{ p.classList.remove('show'); epWin(+d.dataset.i,false); });
   openPanel(null); p.classList.add('show'); }
 function keeperSay(t){ $('kSay').innerHTML=t; const nm=document.querySelector('#kBox .nm'); if(nm) nm.textContent='모닥불지기'; }
 const NPCD=()=>{ const D=SV.npc&&typeof SV.npc==='object'?SV.npc:(SV.npc={}); for(const [k,v] of [['h',{}],['here',[]],['gone',[]],['t',{}]]) if(!D[k]) D[k]=v; return D; };
 const npcOf=k=>NPCS.find(n=>n.k===k);
+const npcHeard=()=>{ const D=NPCD(); return NPCS.filter(n=>(D.h[n.k]||0)>0); };
 const RISE_K=['"…먼저 갔어."','"…먼저 갔어. 네가 쓰러졌을 때, 불이 많이 줄었거든."'];
 function npcHub(){ const D=NPCD(), runs=SV.runs||0; let burned=null;
   if(D.burn){ D.burn=0; const c=NPCS.filter(n=>!D.gone.includes(n.k)&&(D.h[n.k]||0)>=5).sort((a,b)=>(D.here.includes(b.k)?1:0)-(D.here.includes(a.k)?1:0));
