@@ -751,8 +751,16 @@ const MID_HP=1, FIN_HP=2.5, MID_N=3;
 const bossLvF=L=>{ const x=Math.max(0,(L|0)-1); return 1+.1*x+.006*x*x; };
 function bossMaxFor(Z){ let L=S.lv|0, n=1; for(const p of mpPeers()){ const pr=p.presence; if(pr.a!=='f:'+S.field) continue; L=Math.max(L,Math.min(99,pr.l|0)); if(typeof pr.x==='number'&&Math.hypot(pr.x-Z.x,pr.z-Z.z)<45) n++; }
   return Math.round(BOSSDEF[Z.key].hp*(Z.mid?MID_HP:FIN_HP)*bossLvF(L)*(1+.6*(n-1))*deepF(S.deep||0).bhp*TU('bhp')); }
+// v2.61 (11-19 기획자 「보스피가 안 빠져」): 나중에 온 사람(레벨 높음·사람 수 많음)이 더 큰 체력을 정하면 모두의 보스가 그만큼 다시 찼다 → 가장 먼저 정한 값(t가 가장 이른 것)을 모두가 따른다
+function mpBossPick(zid){ let b=null; for(const p of mpFieldPeers()){ const bm=p.presence.bm; if(Array.isArray(bm)) for(const e of bm){ if(!Array.isArray(e)||String(e[0])!==zid) continue; const mx=Math.min(5e6,+e[1]||0), t=+e[2]||9e15; if(mx>0&&(!b||t<b.t||(t===b.t&&mx<b.mx))) b={mx,t}; } } return b; }
+// v2.61 보스가 스스로 차는 것(괴수 먹기·불 삼키기·되찾기)은 화면마다 따로 일어나 체력이 서로 달라지고 「안 빠지는」 사람이 생겼다 → 함께 싸우면 「주인」(이름이 가장 앞선 사람) 화면만 차고, 그 몫(bl)을 모두가 따른다
+function mpBossHeal(zid){ let s=0; for(const p of mpFieldPeers()){ const bl=p.presence.bl; if(Array.isArray(bl)) for(const e of bl) if(Array.isArray(e)&&String(e[0])===zid) s+=Math.max(0,Math.min(5e6,+e[1]||0)); } return s; }
+const mpBossNet=zid=>mpBossDmg(zid)-mpBossHeal(zid);
+function bossOwner(){ if(boss.zid==null||!MP.me) return true; const Z=zoneById(boss.zid); let me=true; for(const p of mpFieldPeers()){ const q=p.presence; if(q.a!=='f:'+S.field||typeof q.x!=='number') continue; if(Z&&Math.hypot(q.x-Z.x,q.z-Z.z)>60) continue; if(p.peer<MP.me) me=false; } return me; }
+function bossHeal(n,mine){ if(!(n>0)) return; if(boss.zid!=null&&!mine&&!bossOwner()) return; const was=boss.hp; boss.hp=Math.min(boss.maxhp,boss.hp+n); if(boss.zid!=null) MPF.bhl[boss.zid]=(MPF.bhl[boss.zid]||0)+(boss.hp-was); }
+const bmWins=(sh,mx,t)=>!!sh&&(!mx||sh.t<t||(sh.t===t&&sh.mx<mx));
 function mpBossMax(zid){ let m=0; for(const p of mpFieldPeers()){ const bm=p.presence.bm; if(Array.isArray(bm)) for(const e of bm) if(Array.isArray(e)&&String(e[0])===zid) m=Math.max(m,Math.min(5e6,+e[1]||0)); } return m; }
-const MPF={fk:null,rd:0,bd:'',bm:{},bdmg:{},oSeen:{},pk:[],dr:[],hit:{},hitSeen:{},hitTold:{},bp:{},drops:new Map(),tag:Math.random().toString(36).slice(2,6),dn:0,lockT:-99,holdSeen:new Set(),pkOld:new Set(),finT:-1e9};
+const MPF={fk:null,rd:0,bd:'',bm:{},bt:{},bhl:{},bdmg:{},oSeen:{},pk:[],dr:[],hit:{},hitSeen:{},hitTold:{},bp:{},drops:new Map(),tag:Math.random().toString(36).slice(2,6),dn:0,lockT:-99,holdSeen:new Set(),pkOld:new Set(),finT:-1e9};
 function hash01(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return ((h>>>0)%100000)/100000; }
 function gradeOf(id,fin){ const w=dropW(fin?'fin':'mid'), T=w.reduce((a,b)=>a+b,0); let r=hash01(id+'g')*T; for(let i=0;i<w.length;i++){ r-=w[i]; if(r<0&&w[i]>0) return i; } return 2; } // v2.55: 모두에게 같은 등급(자리 이름으로 정함)
 const zoneById=id=>MY&&MY.zones?MY.zones.find(z=>z.id===String(id)):null;
@@ -761,7 +769,7 @@ const midsDone=()=>midsN()>=MID_N;
 function nextZone(P){ if(S&&S.duel){ const D=S.duel, E=D.G.filter(G=>G.hp>0&&G.tm!==D.tm), L=E.some(G=>G.mid)?E.filter(G=>G.mid):E; let b=null,bd=1e9; for(const G of L){ const d=Math.hypot(G.x-P.x,G.z-P.z); if(d<bd){ bd=d; b=G; } } return b; } if(!MY||!MY.zones||S.fLoot>0) return null; let b=null,bd=1e9; for(const Z of MY.zones){ if(MPF.bd.includes(Z.id)) continue; if(!Z.mid&&!midsDone()) continue; const d=Math.hypot(Z.x-P.x,Z.z-P.z); if(d<bd){ bd=d; b=Z; } } return b; }
 function zonesRefresh(){ if(!MY||!MY.zones) return; for(const Z of MY.zones){ Z.ring.visible=!MPF.bd.includes(Z.id); if(!Z.mid){ Z.ring.material.color.set(midsDone()?0xd02a40:0x8a8a9a); Z.ring.material.opacity=midsDone()?.5:.3; } } }
 function rmSpot(o){ if(o.g.parent) o.g.parent.remove(o.g); const i=SPOTS.indexOf(o); if(i>=0) SPOTS.splice(i,1); }
-function newRound(r){ MPF.rd=r; MPF.bd=''; MPF.pkOld=new Set(); MPF.bp={}; MPF.bm={}; MPF.bdmg={}; MPF.oSeen={}; MPF.pk=[]; MPF.dr=[]; MPF.hit={}; MPF.hitSeen={}; MPF.hitTold={}; for(const o of MPF.drops.values()) rmSpot(o); MPF.drops.clear(); zonesRefresh(); }
+function newRound(r){ MPF.rd=r; MPF.bd=''; MPF.pkOld=new Set(); MPF.bp={}; MPF.bm={}; MPF.bt={}; MPF.bdmg={}; MPF.bhl={}; MPF.oSeen={}; MPF.pk=[]; MPF.dr=[]; MPF.hit={}; MPF.hitSeen={}; MPF.hitTold={}; for(const o of MPF.drops.values()) rmSpot(o); MPF.drops.clear(); zonesRefresh(); }
 function roundStart(fk){ if(MPF.fk!==fk){ MPF.fk=fk; newRound(0); } else if(MPF.bd.includes('F')) newRound(MPF.rd+1); else { for(const o of MPF.drops.values()) rmSpot(o); MPF.drops.clear(); zonesRefresh(); }
   S.drT=0; mpAdoptRound(true); }
 function pickStartFire(fk){ const F=MY.fires.filter(f=>Math.hypot(f.x-MY.zone.x,f.z-MY.zone.z)>35); if(BOT&&!location.search.includes('rf')) return MY.fire; if(!F.length) return MY.fire;
@@ -2014,7 +2022,7 @@ function spawnBoss(){
   Object.assign(boss,{zid:ZB?ZB.id:null,hop:0,alive:true,hp:B.hp*HM*TU('bhp'),maxhp:B.hp*HM*TU('bhp'),x:P.x+Math.cos(a)*11,z:P.z+Math.sin(a)*11,state:'walk',st:0,shotT:2.5,dashT:6,ringT:7,slamT:4,summonA:false,summonB:false,dx:0,dz:0,flash:0,orbit:0,dying:0,ateIron:false,axeHit:[],cw:Math.random()<.5?1:-1,clawT:3,pounceT:6,roarT:9,shadeT:12,pose:false,chain:0,chainN:0,hops:0,after:0,wave:0,rose:0});
   { const T=B.tint||[1,1,1]; boss.mat.color.setRGB(T[0],T[1],T[2]); } Object.assign(boss,{kt:{},stun:0,shield:0,gs:1,eat:0,seg:0,fled:0,hid:0});
   boss.root.visible=true; boss.root.scale.setScalar(1); boss.mat.opacity=1; boss.mat.transparent=false; bossL.c.set(B.col); bossL.l.color.set(B.col); boss.halo.material.color.set(B.col); bossL.on=true;
-  if(ZB){ const mx=Math.max(MPF.bm[ZB.id]||bossMaxFor(ZB),mpBossMax(ZB.id)); MPF.bm[ZB.id]=mx; boss.maxhp=mx; const od=mpBossDmg(ZB.id); MPF.oSeen[ZB.id]=od; boss.hp=Math.max(1,mx-(MPF.bdmg[ZB.id]||0)-od); }
+  if(ZB){ let mx=MPF.bm[ZB.id]||0, bt=MPF.bt[ZB.id]||9e15; const sh=mpBossPick(ZB.id); if(bmWins(sh,mx,bt)){ mx=sh.mx; bt=sh.t; } if(!mx){ mx=bossMaxFor(ZB); bt=Date.now(); } MPF.bm[ZB.id]=mx; MPF.bt[ZB.id]=bt; boss.maxhp=mx; const od=mpBossNet(ZB.id); MPF.oSeen[ZB.id]=od; boss.hp=Math.min(mx,Math.max(1,mx-(MPF.bdmg[ZB.id]||0)+(MPF.bhl[ZB.id]||0)-od)); }
   boss.dbg=0; boss.tier=ZB?(ZB.mid?'mid':'final'):((BGIM[S.bossKey]||[])[0]||'mid'); gimReset(); // v2.56 단계 + 기믹
   if(boss.tier==='normal'){ boss.maxhp=boss.hp=nbHp(S.field||'myeong',S.bossKey); boss.summonA=boss.summonB=true; boss.zid=null;
     $('bossn').innerHTML='일반 보스 · '+B.name; $('boss').style.display='block'; sndInit(); sfx.roar(); DBG.shake=Math.max(DBG.shake||0,.4); nameBand('일반 보스',B.name,NB_COL[S.field]||'#7a7a90'); if(BOT) DBG.nbSeen=(DBG.nbSeen||0)+1; return; }
@@ -2286,7 +2294,7 @@ const GIM={
     wu(G){ const R=G.R*(boss.gs||1); mR(boss.x,boss.z,R,CP,pls(6)); let n=0; near(boss.x,boss.z,R,o=>{ if(n>8||o.dead) return; const dx=o.x-boss.x,dz=o.z-boss.z,l=Math.hypot(dx,dz)||1; if(l>R) return; n++; mL(boss.x,boss.z,dx/l,dz/l,l,.22,CK,1); }); },
     a0(G){ dnum(boss.x,boss.def.H,boss.z,'흐읍—','mid'); },
     au(G,dt){ const R=G.R*(boss.gs||1); mR(boss.x,boss.z,R,CP,pls(10)); near(boss.x,boss.z,R,o=>{ if(o.dead||(o.type!=='shade'&&o.type!=='wisp')) return; const dx=boss.x-o.x,dz=boss.z-o.z,l=Math.hypot(dx,dz)||1; if(l>R) return; o.x+=dx/l*7*dt; o.z+=dz/l*7*dt;
-        if(l<1.2){ o.dead=true; boss.eat=(boss.eat||0)+1; boss.gs=Math.min(1.7,1+boss.eat*.08); boss.atkM=Math.min(1.8,1+boss.eat*.08); boss.hp=Math.min(boss.maxhp,boss.hp+boss.maxhp*.012); burst(o.x,.6,o.z,3,2); boss.root.scale.setScalar(boss.gs); } }); return G.t>G.o.dur; } },
+        if(l<1.2){ o.dead=true; boss.eat=(boss.eat||0)+1; boss.gs=Math.min(1.7,1+boss.eat*.08); boss.atkM=Math.min(1.8,1+boss.eat*.08); bossHeal(boss.maxhp*.012); burst(o.x,.6,o.z,3,2); boss.root.scale.setScalar(boss.gs); } }); return G.t>G.o.dur; } },
   ram:{ body:1, w0(G){ const q=bDir(); G.dx=q[0]; G.dz=q[1]; G.L=G.o.L*GU; G.W=G.o.R*GU; sfx.roar(); bossPose(true); },
     wu(G){ bossLook(G.dx,G.dz); boss.gLean=Math.min(1,G.t/.5); mL(boss.x,boss.z,G.dx,G.dz,G.L,G.W,CR,pls()); },
     a0(G){ boss.gLean=0; boss.state='gdash'; boss._bonk=0; DBG.shake=Math.max(DBG.shake||0,.4); G.go=0; },
@@ -2317,7 +2325,7 @@ const GIM={
   eatfire:{ body:1, w0(G){ G.R=(G.o.big?6:4)*1.1; sfx.roar(); toastOnce('eat56','숨을 들이켠다','붉은 원 안에 있으면 불을 먹고 단단해진다 · 원 밖으로!',true); },
     wu(G){ mR(boss.x,boss.z,G.R,CR,pls(8)); const k=(G.t*1.4)%1, r=G.R*(1-k)+.6; for(let i=0;i<8;i++){ const a=i*.785+G.t*.5; mL(boss.x+Math.cos(a)*r,boss.z+Math.sin(a)*r,-Math.cos(a),-Math.sin(a),1.1,.25,CR,1); } },
     a0(G){ const P=player.root.position, d=Math.hypot(P.x-boss.x,P.z-boss.z); if(S.haz) S.haz=S.haz.filter(h=>!(h.k==='fire'&&Math.hypot(h.x-boss.x,h.z-boss.z)<G.R));
-      if(d<G.R){ boss.shield=G.o.dur; boss.hp=Math.min(boss.maxhp,boss.hp+boss.maxhp*.03); toast('불을 삼켰다','단단해졌다('+G.o.dur+'초)'); } else dnum(boss.x,boss.def.H,boss.z,'헛숨','mid');
+      if(d<G.R){ boss.shield=G.o.dur; bossHeal(boss.maxhp*.03); toast('불을 삼켰다','단단해졌다('+G.o.dur+'초)'); } else dnum(boss.x,boss.def.H,boss.z,'헛숨','mid');
       const a=Math.atan2(P.z-boss.z,P.x-boss.x); for(let i=0;i<9;i++) shot(boss.x,boss.z,a+(i-4)*.13,6.5); },
     au(){ return true; } },
   eclipse:{ w0(){ sfx.roar(); eclWarn(true); dnum(boss.x,boss.def.H,boss.z,'하늘을 문다','mid'); },
@@ -2386,7 +2394,7 @@ const GIM={
       if(G.o.roll){ const dx=boss.x-G.x, dz=boss.z-G.z, l=Math.hypot(dx,dz)||1; G.x+=dx/l*1.5*dt; G.z+=dz/l*1.5*dt; } else { const dx=G.x-boss.x, dz=G.z-boss.z, l=Math.hypot(dx,dz)||1; boss.x+=dx/l*1.7*dt; boss.z+=dz/l*1.7*dt; bossLook(dx,dz); }
       orbDraw(G);
       if(Math.hypot(P.x-G.x,P.z-G.z)<1.2*GU+.35){ const vt=G.o.vt||5; boss.vuln=vt; sfx.sparkle(); fx(G.x,G.z,1.4,[1,.85,.35],.4); toast(G.o.roll?'머리를 막았다':'구슬을 밟았다','받는 피해 +50% ('+vt+'초)'); return true; }
-      if(Math.hypot(boss.x-G.x,boss.z-G.z)<1.1||G.t>G.o.dur){ boss.hp=Math.min(boss.maxhp,boss.hp+boss.maxhp*(G.o.heal||.08)); dnum(boss.x,boss.def.H,boss.z,'되찾았다','mid'); burst(G.x,1,G.z,12,3); return true; } return false; } },
+      if(Math.hypot(boss.x-G.x,boss.z-G.z)<1.1||G.t>G.o.dur){ bossHeal(boss.maxhp*(G.o.heal||.08)); dnum(boss.x,boss.def.H,boss.z,'되찾았다','mid'); burst(G.x,1,G.z,12,3); return true; } return false; } },
   ssireum:{ w0(G){ const P=player.root.position; G.x=P.x; G.z=P.z; G.R=G.o.R; toast('씨름 한 판 하자!','초록 원 안에서 3초 버텨라 · 밀려나지 마라'); sfx.laugh(); },
     wu(G){ mD(G.x,G.z,G.R,CG,pls(5)); mR(G.x,G.z,G.R,CG,1); for(let i=0;i<4;i++){ const a=i*1.571+S.t*.7; mL(G.x+Math.cos(a)*(G.R+1.3),G.z+Math.sin(a)*(G.R+1.3),-Math.cos(a),-Math.sin(a),1.1,.5,CG,1); } },
     a0(G){ G.inT=0; G.sh=0; },
@@ -2494,7 +2502,7 @@ function summonRing(n){ const P=player.root.position; for(let i=0;i<n;i++){ cons
 function shot(x,z,a,spd,wait=.38){ foxShots.push({x,z,y:1.3,vx:Math.cos(a)*spd,vz:Math.sin(a)*spd,life:3.5,wait}); sfx.shot(); }
 function damageBoss(n,src){
   if(!boss.alive||boss.dying>0||(S.inSafe&&src!=='dbg')) return; if(boss.freeze>0) n*=1.25; if(S.fb) n*=S.fb.boss;
-  if(S.bossKey==='bulgasari'&&src==='axe'){ boss.hp=Math.min(boss.maxhp,boss.hp+n*.3); boss.flash=.5; if(!boss.ateIron){ boss.ateIron=true; toast('쇠를 먹었다','불가사리는 도끼를 씹어 삼킨다'); sfx.ironChew(); } return; }
+  if(S.bossKey==='bulgasari'&&src==='axe'){ bossHeal(n*.3,true); boss.flash=.5; if(!boss.ateIron){ boss.ateIron=true; toast('쇠를 먹었다','불가사리는 도끼를 씹어 삼킨다'); sfx.ironChew(); } return; }
   if(boss.shield>0) n*=.3; if(boss.vuln>0) n*=1.5; if(src!=='dbg'&&S.gk&&S.gk.uni.golmu&&Math.random()<.08) n*=2;
   boss.hp-=n; boss.flash=1; if(boss.zid!=null) MPF.bdmg[boss.zid]=(MPF.bdmg[boss.zid]||0)+n;
   boss.dnA=(boss.dnA||0)+n; if(S.t-(boss.dnT??-9)>.55){ boss.dnT=S.t; const v=Math.round(boss.dnA); boss.dnA=0; if(v>=1) dnum(boss.x,(boss.def?boss.def.H:3)*.8,boss.z,v,v>=80?'big boss':'mid boss'); if(v>=80) HS=Math.max(HS,.05); }
@@ -4077,7 +4085,23 @@ setInterval(()=>{ try{ ptTick(); }catch(e){ console.warn('pty',e); } },400);
 /* ---- 음성 통화 ---- */
 const CALL={log:[],last:null,out:0,reT0:0,st:'',peer:'',nm:'',id:'',pc:null,ms:null,q:[],t0:0,mute:false,ringT:0,gone:0,ring:null};
 const canCall=()=>!!(MP.room&&MP.room.ext&&MP.room.sig&&window.RTCPeerConnection&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
-const ICE_CFG={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]};
+// v2.61: 휴대폰 데이터끼리는 STUN만으로 길이 안 뚫릴 때가 많다 → 중계(TURN) 열쇠가 빌드에 들어 있으면(window.JANYA_ICE) 같이 쓴다
+const ICE_CFG={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478']},...(Array.isArray(window.JANYA_ICE)?window.JANYA_ICE:[])]};
+/* v2.61 (11-19 기획자 「연결은 됐는데 목소리가 안 들렸어」): ① 소리 재생이 막히면(휴대폰이 「사람이 눌러야 소리」로 막음) 크게 「🔊 소리 켜기」 + 화면 어디를 눌러도 다시 틂
+   ② 통화 중 1초마다 소리가 오가는지 잰다(getStats) → 막대에 🔊/🔈 · 8초 넘게 안 오면 까닭을 알려 줌 */
+function audKick(){ let ok=0; for(const a of document.querySelectorAll('#callAu,audio[id^=pvAu_]')){ if(a.srcObject&&(a.paused||CALL.needTap||PV.needTap)){ try{ a.play().then(()=>{ if(CALL.needTap||PV.needTap){ CALL.needTap=0; PV.needTap=0; const B=$('sndB'); if(B) B.remove(); callUI(); pvUI(); toast('🔊 소리를 켰다'); } }).catch(()=>{}); }catch(e){} } else if(a.srcObject) ok++; } return ok; }
+function audBlocked(){ if($('sndB')) return; buzz([60,40,60]); askBox('sndB','<b>🔊 상대 목소리를 틀려면 눌러 주세요</b><small>휴대폰이 「한 번 눌러야 소리」로 막았다</small>',[['🔊 소리 켜기','big call',()=>{ audKick(); }]],20000); }
+addEventListener('pointerdown',()=>{ if(CALL.needTap||PV.needTap) audKick(); },true);
+const AUD={inE:0,inP:0,outE:0,quietIn:0,quietOut:0,told:'',rel:''};
+async function audMeter(){ const pc=CALL.pc; if(!pc||CALL.st!=='on'){ AUD.quietIn=AUD.quietOut=0; AUD.told=''; AUD.inP=AUD.inE=AUD.outE=0; AUD.hear=false; return; } let st; try{ st=await pc.getStats(); }catch(e){ return; }
+  let inE=null,inP=null,outE=null,lv=0; st.forEach(r=>{ if(r.type==='inbound-rtp'&&(r.kind==='audio'||r.mediaType==='audio')){ inP=r.packetsReceived||0; if(typeof r.totalAudioEnergy==='number') inE=r.totalAudioEnergy; if(typeof r.audioLevel==='number') lv=r.audioLevel; }
+    if(r.type==='media-source'&&r.kind==='audio'&&typeof r.totalAudioEnergy==='number') outE=r.totalAudioEnergy;
+    if(r.type==='candidate-pair'&&r.nominated&&r.state==='succeeded'){ const lc=st.get(r.localCandidateId); if(lc) AUD.rel=lc.candidateType==='relay'?'중계':'바로'; } });
+  const dP=inP!=null?inP-AUD.inP:0, dE=inE!=null?inE-AUD.inE:0, dO=outE!=null?outE-AUD.outE:-1; if(inP!=null) AUD.inP=inP; if(inE!=null) AUD.inE=inE; if(outE!=null) AUD.outE=outE;
+  AUD.hear=dP>0&&(dE>1e-5||lv>.01); AUD.quietIn=AUD.hear?0:AUD.quietIn+1; AUD.quietOut=(dO>=0&&dO<1e-6&&!CALL.mute)?AUD.quietOut+1:0; AUD.noPk=dP<=0;
+  if(AUD.quietIn>=8&&AUD.told!=='in'){ AUD.told='in'; toast(AUD.noPk?'🔈 상대 소리가 오지 않는다':'🔈 상대 쪽이 조용하다',AUD.noPk?'길이 막혔다 · 와이파이로 바꾸거나 📞 다시 걸기':`${CALL.nm}의 마이크가 꺼졌거나(🔇) 휴대폰이 마이크를 막았다`); }
+  if(AUD.quietOut>=8&&AUD.told!=='out'){ AUD.told='out'; toast('🎤 내 마이크 소리가 안 나간다','다른 앱이 마이크를 쓰는지 · 브라우저 마이크 허락 보기'); } }
+setInterval(()=>{ audMeter().catch(()=>{}); },1000);
 const callSig=(k,o={})=>{ if(MP.room&&MP.room.sig&&CALL.peer) MP.room.sig(CALL.peer,{k,id:CALL.id,...o}); };
 async function callMic(){ try{ return await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false}); }catch(e){ toast('🎤 마이크를 쓸 수 없다','브라우저에서 마이크를 허락해야 통화가 된다'); return null; } }
 async function callStart(peer){ cardClose(); if(!canCall()) return toast('📞 전화는 GitHub 판에서만 된다','vera-architect.github.io/janya-play'); if(CALL.st) return toast('이미 통화 중이다'); if(PV.on) return toast('🎙 파티 음성 중이다','파티원과는 이미 이야기하는 중 · ✕로 나와서 걸기');
@@ -4087,7 +4111,7 @@ async function callStart(peer){ cardClose(); if(!canCall()) return toast('📞 �
   clearTimeout(CALL.ringT); CALL.ringT=setTimeout(()=>{ if(CALL.st==='out') callEnd(`${CALL.nm}가 받지 않았다`); },30000); }
 function callPc(){ const pc=new RTCPeerConnection(ICE_CFG); CALL.pc=pc; for(const t of CALL.ms.getTracks()) pc.addTrack(t,CALL.ms);
   pc.onicecandidate=e=>{ if(e.candidate) callSig('ice',{c:e.candidate.toJSON()}); };
-  pc.ontrack=e=>{ const au=callAu(); au.srcObject=e.streams[0]||new MediaStream([e.track]); const pl=au.play(); if(pl&&pl.catch) pl.catch(()=>{ CALL.needTap=1; callUI(); }); };
+  pc.ontrack=e=>{ const au=callAu(); au.srcObject=e.streams[0]||new MediaStream([e.track]); const pl=au.play(); if(pl&&pl.catch) pl.catch(()=>{ CALL.needTap=1; callUI(); audBlocked(); }); };
   pc.onconnectionstatechange=()=>{ const s=pc.connectionState; if(pc!==CALL.pc) return;
     if(s==='connected'&&CALL.st==='re'){ CALL.st='on'; toast('📞 다시 이어졌다'); callUI(); }
     else if((s==='disconnected'||s==='failed')&&(CALL.st==='on'||CALL.st==='re')) callRe();
@@ -4111,7 +4135,7 @@ function callEnd(msg,sub='',tell=true,r='hang',why=''){ if(!CALL.st) return; if(
   if(CALL.peer&&CALL.nm){ const d=new Date(); CALL.log.unshift({tm:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),nm:CALL.nm,dur,why:w}); CALL.log.length=Math.min(CALL.log.length,3);
     if(talked||CALL.st==='out'){ CALL.last={peer:CALL.peer,nm:CALL.nm,why:w,dur,until:performance.now()+7000}; callBeepEnd(); } }
   try{ if(CALL.pc) CALL.pc.close(); }catch(e){} try{ if(CALL.ms) CALL.ms.getTracks().forEach(t=>t.stop()); }catch(e){} const a=$('callAu'); if(a){ try{ a.pause(); }catch(e){} a.srcObject=null; }
-  const B=$('callInB'); if(B) B.remove(); Object.assign(CALL,{st:'',pc:null,ms:null,q:[],peer:'',id:'',needTap:0}); callDuck(false); callUI(); if(msg) toast(msg,sub); }
+  const B=$('callInB'); if(B) B.remove(); { const sb=$('sndB'); if(sb&&!PV.on) sb.remove(); } Object.assign(CALL,{st:'',pc:null,ms:null,q:[],peer:'',id:'',needTap:0}); callDuck(false); callUI(); if(msg) toast(msg,sub); }
 function callBeepEnd(){ try{ const c=SND.ctx; if(c){ const t=c.currentTime; for(const d of [0,.32]){ const o=c.createOscillator(), g=c.createGain(); o.type='sine'; o.frequency.value=480; g.gain.setValueAtTime(0,t+d); g.gain.linearRampToValueAtTime(.1,t+d+.02); g.gain.setValueAtTime(.1,t+d+.2); g.gain.linearRampToValueAtTime(0,t+d+.24); o.connect(g); g.connect(c.destination); o.start(t+d); o.stop(t+d+.26); } } if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){} }
 async function callAccept(){ callRing(false); CALL.st='mic'; const ms=await callMic(); if(!ms){ callSig('rej'); Object.assign(CALL,{st:'',peer:'',id:''}); callUI(); return; }
   if(CALL.st!=='mic'){ ms.getTracks().forEach(t=>t.stop()); return; } CALL.ms=ms; CALL.st='conn'; callSig('acc'); callUI();
@@ -4139,7 +4163,7 @@ function callUI(){ const b=$('callBar'); if(!b) return; const st=CALL.st, L=CALL
   b.style.display=ended||(st&&st!=='in'&&st!=='mic')?'flex':'none'; b.classList.toggle('ended',!!ended); b.classList.toggle('re',st==='re');
   if(ended){ $('cbN').textContent=L.nm; $('cbT').textContent=L.why+(L.dur?' · '+L.dur:''); return; } if(!st||st==='in'||st==='mic') return;
   $('cbN').textContent=CALL.nm; const p=mpPeers().find(q=>q.peer===CALL.peer);
-  $('cbT').textContent=CALL.needTap?'소리 켜기 👆':st==='out'?'거는 중…':st==='conn'?'잇는 중…':st==='re'?'다시 잇는 중…':CALL.gone>3?'신호 기다리는 중…':mmss((performance.now()-CALL.t0)/1000);
+  $('cbT').textContent=CALL.needTap?'소리 켜기 👆':st==='out'?'거는 중…':st==='conn'?'잇는 중…':st==='re'?'다시 잇는 중…':CALL.gone>3?'신호 기다리는 중…':mmss((performance.now()-CALL.t0)/1000)+(AUD.quietIn>=3?' 🔈':AUD.hear?' 🔊':'');
   $('cbMute').textContent=CALL.mute?'🔇':'🎤'; $('cbMute').classList.toggle('off',CALL.mute); const pt=p&&isParty(p); $('cbPty').textContent=pt?'🤝✓':PTY.inv&&PTY.inv.to===CALL.peer?'🤝…':'🤝'; $('cbPty').classList.toggle('on',!!pt); b.classList.toggle('live',st==='on'); }
 setInterval(()=>{ if(!CALL.st){ if(CALL.last){ callUI(); if(performance.now()>CALL.last.until) CALL.last=null; } return; } callUI(); if(CALL.st==='in'||CALL.st==='mic') return; const here=mpPeers().some(q=>q.peer===CALL.peer); CALL.gone=here?0:CALL.gone+1;
   const lim=CALL.st==='on'||CALL.st==='re'?30:9; if(CALL.gone>=lim) callEnd(`📞 ${CALL.nm} 연결이 끊겼다`,'상대 쪽 신호가 끊겼다 · 📞 다시 걸기',true,'net','상대 신호 끊김'); },1000);
@@ -4153,7 +4177,7 @@ function pvMates(){ return mpPeers().filter(p=>ptRaw(p)&&p.presence&&p.presence.
 function pvAu(peer){ const id='pvAu_'+peer.replace(/[^a-z0-9]/gi,''); let a=$(id); if(!a){ a=document.createElement('audio'); a.id=id; a.autoplay=true; a.setAttribute('playsinline',''); document.body.appendChild(a); } return a; }
 function pvPc(peer){ const pc=new RTCPeerConnection(ICE_CFG); pc._t0=Date.now(); PV.pcs.set(peer,pc); for(const t of PV.ms.getTracks()) pc.addTrack(t,PV.ms);
   pc.onicecandidate=e=>{ if(e.candidate) pvSig(peer,{t:'ice',c:e.candidate.toJSON()}); };
-  pc.ontrack=e=>{ const au=pvAu(peer); au.srcObject=e.streams[0]||new MediaStream([e.track]); const pl=au.play(); if(pl&&pl.catch) pl.catch(()=>{ PV.needTap=1; pvUI(); }); };
+  pc.ontrack=e=>{ const au=pvAu(peer); au.srcObject=e.streams[0]||new MediaStream([e.track]); const pl=au.play(); if(pl&&pl.catch) pl.catch(()=>{ PV.needTap=1; pvUI(); audBlocked(); }); };
   pc.onconnectionstatechange=()=>{ const s=pc.connectionState; if(s==='connected'){ const p=mpPeers().find(q=>q.peer===peer); toast(`🎙 ${p?mpName(p):'파티원'}와 음성이 이어졌다`); } if(s==='failed'){ pvDrop(peer); } pvUI(); };
   return pc; }
 function pvDrop(peer){ const pc=PV.pcs.get(peer); if(pc){ try{ pc.close(); }catch(e){} PV.pcs.delete(peer); } PV.q.delete(peer); const a=$('pvAu_'+peer.replace(/[^a-z0-9]/gi,'')); if(a){ a.srcObject=null; a.remove(); } }
@@ -4232,7 +4256,7 @@ function mpArea(){ if(!S||!(S.phase==='play'||S.phase==='lvup'||S.phase==='choic
 function mpPeers(){ if(DBG.fakePeers) return DBG.fakePeers; if(!MP.room) return []; try{ return MP.room.peers().filter(p=>!p.isMe&&p.kind==='viewer'&&p.presence); }catch(e){ return []; } }
 // 같은 필드·같은 판의 사람 (쓰러져 기지에 있어도 그 사람이 흘린 불씨·주운 기록은 남는다)
 function mpFieldPeers(){ const fk=S&&S.field; if(!fk||S.duel) return []; return mpPeers().filter(p=>p.presence.dk===fk&&p.presence.r===MPF.rd); }
-function mpBossDmg(zid){ let s=0; for(const p of mpFieldPeers()){ const bh=p.presence.bh; if(Array.isArray(bh)) for(const e of bh) if(Array.isArray(e)&&String(e[0])===zid) s+=Math.max(0,Math.min(1e5,+e[1]||0)); } return s; }
+function mpBossDmg(zid){ let s=0; for(const p of mpFieldPeers()){ const bh=p.presence.bh; if(Array.isArray(bh)) for(const e of bh) if(Array.isArray(e)&&String(e[0])===zid) s+=Math.max(0,Math.min(5e6,+e[1]||0)); } return s; }
 function mpNearHolder(P){ let b=null,bd=1e9; for(const [k,G] of MP.ghosts){ if(!G.hold) continue; const d=Math.hypot(G.g.position.x-P.x,G.g.position.z-P.z); if(d<bd){ bd=d; b={x:G.g.position.x,z:G.g.position.z,nm:G.nm}; } } return b; }
 // 판 맞추기: 같은 필드에서 나보다 앞선 판이면 따라간다(3분 세는 중이 아닐 때) · 남이 보낸 보스는 나도 보낸 것으로
 function mpAdoptRound(join){ if(!FIELD||!S||!MY.zones) return; const fk=S.field; let mx=MPF.rd;
@@ -4360,7 +4384,7 @@ const PVP_R=5.5;
 function mpTick(dt){ const R=MP.room; if(!R) return; const area=mpArea(), now=performance.now(), inF=FIELD&&S&&S.field&&area!=='hub'&&!S.duel;
   if(now-MP.lastSend>110){ MP.lastSend=now; const P=player.root.position;
     let st=area==='hub'?{a:'hub',c:SV.char||'fire',e:0,s:0}:{a:area,x:Math.round(P.x*10)/10,z:Math.round(P.z*10)/10,c:SV.char||'fire',l:S.lv|0,h:Math.round(Math.max(0,S.hp)/S.maxhp*20)/20,e:inF?(S.emG||[]).length:0,s:S.inSafe?1:0,dn:S.down?1:0};
-    if(MPF.fk) Object.assign(st,{dk:MPF.fk,r:MPF.rd,bd:MPF.bd,bp:Object.entries(MPF.bp),bm:Object.entries(MPF.bm),bh:Object.entries(MPF.bdmg).map(([k,v])=>[k,Math.round(v)]),pk:MPF.pk.slice(-30),dr:MPF.dr.slice(-8),hit:inF?Object.entries(MPF.hit).slice(-6).map(([k,v])=>[k,Math.round(v)]):[]});
+    if(MPF.fk) Object.assign(st,{dk:MPF.fk,r:MPF.rd,bd:MPF.bd,bp:Object.entries(MPF.bp),bm:Object.entries(MPF.bm).map(([k,v])=>[k,v,MPF.bt[k]||0]),bh:Object.entries(MPF.bdmg).map(([k,v])=>[k,Math.round(v)]),bl:Object.entries(MPF.bhl).map(([k,v])=>[k,Math.round(v)]),pk:MPF.pk.slice(-30),dr:MPF.dr.slice(-8),hit:inF?Object.entries(MPF.hit).slice(-6).map(([k,v])=>[k,Math.round(v)]):[]});
     if(S&&S.duel&&area!=='hub') Object.assign(st,{tm:S.duel.tm||'',dd:S.duel.dead>0?1:0,bt:S.duel.bet?(({s,i,g,o,on,e,v,k,u})=>({s,i,g,o,on,e,v,k,u}))(S.duel.bet):0,gd:S.duel.G.filter(G=>G.my>0).map(G=>[G.id,Math.round(G.my)]),dh:Object.entries(DUELH).map(([k,v])=>[k,Math.round(v)]).slice(-8)});
     if(MP.myNm) st.nm=MP.myNm; ptPresence(st); const k=JSON.stringify(st); if(k!==MP.lastKey){ MP.lastKey=k; R.presence({x:null,z:null,l:null,h:null,...st}).catch(()=>{}); } }
   // v2.27 필드 이어받기: 필드 안에 있는 동안 4초마다(바뀌었거나 30초 지나면) · 필드를 나가는 순간 한 번 더
@@ -4375,8 +4399,8 @@ function mpTick(dt){ const R=MP.room; if(!R) return; const area=mpArea(), now=pe
     // 같은 불씨를 거의 같이 주웠으면: peer 이름이 앞선 쪽이 가진다(모두에게 같은 규칙)
     if(S.emG&&S.emG.length&&MP.me){ for(let i=S.emG.length-1;i>=0;i--){ const e=S.emG[i]; if(!e.id||now-e.t>6000) continue; for(const p of mpFieldPeers()){ if(Array.isArray(p.presence.pk)&&p.presence.pk.includes(e.id)&&p.peer<MP.me){ S.emG.splice(i,1); S.ember=S.emG.length; MPF.pk=MPF.pk.filter(x=>x!==e.id); MPF.pk.push(e.id); lootHud(); toast(`🔥 ${mpName(p)}가 한발 먼저 주웠다`,'쫓아가서 쓰러뜨리면 떨어진다'); break; } } } }
     // 보스 함께 깎기: 남이 같은 보스에 준 피해만큼 내 보스도 깎인다
-    if(boss.alive&&!boss.dying&&boss.zid!=null){ const tm=mpBossMax(boss.zid); if(tm>boss.maxhp){ boss.hp+=tm-boss.maxhp; boss.maxhp=tm; MPF.bm[boss.zid]=tm; } }
-    if(boss.alive&&!boss.dying&&boss.zid!=null){ const od=mpBossDmg(boss.zid), dl=od-(MPF.oSeen[boss.zid]||0); MPF.oSeen[boss.zid]=od; if(dl>0){ boss.hp-=dl; boss.flash=1; if(boss.hp<=0){ boss.hp=0; boss.dying=1.8; boss.mat.transparent=true; teleMesh.visible=false; slamRing.visible=false; sfx.roar(); } } }
+    if(boss.alive&&!boss.dying&&boss.zid!=null){ const z=boss.zid, sh=mpBossPick(z); if(bmWins(sh,boss.maxhp,MPF.bt[z]||9e15)&&Math.abs(sh.mx-boss.maxhp)>.5){ MPF.bm[z]=sh.mx; MPF.bt[z]=sh.t; boss.maxhp=sh.mx; const od=mpBossNet(z); MPF.oSeen[z]=od; boss.hp=Math.min(sh.mx,Math.max(1,sh.mx-(MPF.bdmg[z]||0)+(MPF.bhl[z]||0)-od)); } else if(sh&&sh.t===(MPF.bt[z]||9e15)) MPF.bt[z]=sh.t; }
+    if(boss.alive&&!boss.dying&&boss.zid!=null){ const od=mpBossNet(boss.zid), dl=od-(MPF.oSeen[boss.zid]||0); MPF.oSeen[boss.zid]=od; if(dl<0) boss.hp=Math.min(boss.maxhp,boss.hp-dl); if(dl>0){ boss.hp-=dl; boss.flash=1; if(boss.hp<=0){ boss.hp=0; boss.dying=1.8; boss.mat.transparent=true; teleMesh.visible=false; slamRing.visible=false; sfx.roar(); } } }
     // 내가 맞는 것: 남이 나를 때린 누적 피해(내가 불씨를 들고 있을 때만)
     if(MP.me){ for(const p of mpFieldPeers()){ if(p.presence.a!==area||isParty(p)) continue; const H=p.presence.hit; let t=0; if(Array.isArray(H)) for(const e of H) if(Array.isArray(e)&&e[0]===MP.me) t=Math.max(0,Math.min(1e6,+e[1]||0));
       const prev=MPF.hitSeen[p.peer]; MPF.hitSeen[p.peer]=t; if(prev==null||t<=prev) continue; const dl=t-prev;
