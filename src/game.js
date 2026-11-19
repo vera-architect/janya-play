@@ -12,6 +12,7 @@ import { HD } from './hongdae_data.js';
 import { SS } from './seongsu_data.js';
 import { GD } from './gyeong_data.js';
 import { NS } from './namsan_data.js';
+import { AR } from './arena_data.js';
 import { makeArt, axeTex, gemTex, bigGemTex, emberTex, radial, shadowC, ringC, lineC, groundC, concreteC, saltC, beanC, talisC, puddleC, fanC, markC, lootPropC, sparkC, floorGlowC, mk, setSeed, rnd, rr } from './art.js';
 
 const $ = id => document.getElementById(id);
@@ -29,6 +30,8 @@ const FIELDS={
   hongdae:{name:'홍대 밤거리',boss:'bibi',mids:['giltal','agwi','dueok'],mobs:['gwijol','yeongno','dfire'],star:2,desc:'밤마다 귀신 무리가 노는 거리',data:()=>HD},
   seongsu:{name:'성수 공장골목',boss:'imugi',mids:['bulgasari','mulgwi','jireongi'],mobs:['yagwang','gangcheol','mokrang'],star:3,desc:'쇠와 물의 땅 · 공장과 수제화 골목',data:()=>SS},
   gyeong:{name:'경복궁',boss:'haechi',mids:['tiger','gyoryong','mulgoe'],mobs:['bulsae','hwama','imae'],star:4,desc:'왕의 자리 · 궁궐의 불막이',data:()=>GD},
+  // v2.67 결투 전용(1대1) — 사냥 지도 목록(FKEYS)엔 없음. 점대칭이라 양쪽 진영이 똑같다
+  arena:{name:'결투 의례장',boss:'dokkaebi',mids:['gumiho','jine','yagwangK'],mobs:['jineS','fox','mangryang'],star:1,desc:'돌 조각을 두고 벌이는 저승의 의례',data:()=>AR,duel:1},
   namsan:{name:'남산',boss:'datbal',mids:['bulgae','gureong','jangseung'],mobs:['bulgaeS','gureongS'],star:5,desc:'하늘·숲·탑 · 마지막 땅',data:()=>NS}
 };
 const FKEYS=['myeong','hongdae','seongsu','gyeong','namsan'];
@@ -606,6 +609,7 @@ const MOOD={
   hongdae:{fog:0x110f26,sky:0x7a66d8,gnd:0x241e3a,moon:0xb4a4ff,hemiI:.6,moonI:.85,sat:.62,m:{n:60,c:[0x7affb0,0xc890ff],vy:.06,sz:.38,op:.95,wob:1.1}}, // 보라 밤 · 떠도는 도깨비불
   seongsu:{fog:0x1c130c,sky:0xc0905a,gnd:0x3a2618,moon:0xffbc80,hemiI:.62,moonI:.9,sat:.56,m:{n:110,c:[0xffa040,0xffd070],vy:.7,sz:.17,op:.95,wob:.5}}, // 용광로 빛 · 쇳가루 불티
   gyeong:{fog:0x0b1424,sky:0x6a8ad0,gnd:0x1e2638,moon:0xd4e4ff,hemiI:.58,moonI:.9,sat:.52,m:{n:60,c:[0xd8e8ff,0xa8c8ff],vy:-.12,sz:.2,op:.8,wob:.4}}, // 푸른 달빛 · 서리 먼지
+  arena:{fog:0x1a0e14,sky:0x8a6a8a,gnd:0x2a1a22,moon:0xffc0b0,hemiI:.64,moonI:.9,sat:.55,m:{n:70,c:[0xffb070,0xff8a60],vy:.4,sz:.2,op:.8,wob:.5}}, // v2.67 결투 의례장 · 붉은 재
   namsan:{fog:0x0c1612,sky:0x6aa090,gnd:0x1a2a22,moon:0xc4ecdc,hemiI:.6,moonI:.9,sat:.5,m:{n:120,c:[0x8a8a96,0xb0b0bc],vy:-.5,sz:.28,op:.7,wob:.6}}}; // 숲 안개 · 검은 눈
 const moodOf=k=>MOOD[k]||{...NIGHT,m:null};
 let MOTES=null;
@@ -634,7 +638,7 @@ function getMyeong(key='myeong'){ if(FBUILT[key]){ MY=FBUILT[key]; return MY; }
   let bz=null; if(FD.ZONE){ let bs=-1e9; const [zx,zz]=FD.ZONE, zr=FD.ZR||40; for(let x=zx-zr;x<=zx+zr;x+=2) for(let z=zz-zr;z<=zz+zr;z+=2){ if(MY.blocked(x,z)) continue; const sc=Math.min(12,MY.distAt(x,z))-Math.hypot(x-zx,z-zz)*.03; if(sc>bs){ bs=sc; bz=[x,z]; } } }
   bz=bz||MY.openSpot(st,85)||[st[0],st[1]-80]; MY.zone={x:bz[0],z:bz[1],r:10};
   // v2.9.2: 모닥불 더 많이 — 보스 가는 길 중간 1곳 + 필드 전체에 고르게(가장 먼 빈터부터). 명동 6 · 수원 10 (기획자 평: 안전지대에서 밀린 성장을 몰아 고르기)
-  MY.fires=[MY.fire]; { const S0=MY.fire, Z=MY.zone, B=MY.bounds, free=(x,z)=>!MY.blocked(x,z), N=Math.min(10,5+Math.round(B.w*B.h/55000));
+  MY.fires=[MY.fire]; if(FD.FIRES){ MY.fires=FD.FIRES.map(([x,z])=>({x,z})); MY.fire=MY.fires[0]; } else { const S0=MY.fire, Z=MY.zone, B=MY.bounds, free=(x,z)=>!MY.blocked(x,z), N=Math.min(10,5+Math.round(B.w*B.h/55000));
     const open=(x,z)=>{ let c=0; for(let k=0;k<12;k++){ const a=k/12*6.283; for(const r of [3,5,7]) if(free(x+Math.cos(a)*r,z+Math.sin(a)*r)) c++; } return c; };
     const ok=(x,z)=>x>=B.x0+EDGE_FADE&&z>=B.z0+EDGE_FADE&&x<=B.x0+B.w-EDGE_FADE&&z<=B.z0+B.h-EDGE_FADE&&free(x,z)&&Math.hypot(x-Z.x,z-Z.z)>=Z.r+22;
     { const tx=S0.x+(Z.x-S0.x)*.55, tz=S0.z+(Z.z-S0.z)*.55; let best=null,bs=-1e9; for(let x=tx-16;x<=tx+16;x+=2) for(let z=tz-16;z<=tz+16;z+=2){ if(!ok(x,z)||Math.hypot(x-S0.x,z-S0.z)<30) continue; const c=open(x,z), sc=c-Math.hypot(x-tx,z-tz)*.15; if(c>=28&&sc>bs){ bs=sc; best={x,z}; } } if(best) MY.fires.push(best); }
@@ -4291,7 +4295,7 @@ function mpClear(){ for(const G of MP.ghosts.values()){ scene.remove(G.g); } MP.
    · 멸망전 = 결투장(1대1~3대3)에 장비를 하나씩 걸고 겨룸. 건 장비는 같은 등급끼리만(방 이름에 등급이 붙어 다른 등급끼린 못 만남) ·
      이긴 팀이 진 팀이 건 장비를 다 가져감(한 사람씩 나눠) · 판 안에선 장비 능력치가 꺼져 실력으로만 · 판정 서버가 없어 친구 방 코드로만 ·
      판 도중 나가면 건 장비를 잃음(지고 나가서 지키는 일 막기) · 혼자 연습(상대를 한 번도 못 만남)이면 돌려받음 */
-const DUELM={'1':{n:'1대1',f:'myeong',mid:1,T:480},'2':{n:'2대2',f:'hongdae',mid:2,T:600},'3':{n:'3대3',f:'seongsu',mid:3,T:780}};
+const DUELM={'1':{n:'1대1',f:'arena',mid:1,T:480},'2':{n:'2대2',f:'hongdae',mid:2,T:600},'3':{n:'3대3',f:'seongsu',mid:3,T:780}};
 const DUEL_RW={w:{sh:800,mat:3,fame:10},l:{sh:300,mat:1,fame:3}};
 const betItem=()=>{ const id=(SV.duelUi||{}).bid; return id&&SV.bag.find(x=>x.id===id&&!Object.values(SV.eq).includes(x.id)&&!x.lk)||null; };
 const gIdx=it=>Math.max(0,GRADE.indexOf(gGr(it)));

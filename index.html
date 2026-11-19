@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Nanum+Brush+Script&family=Noto+Serif+KR:wght@700&display=swap">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>잔야(가제) — 1단계 맛보기 v2.66</title>
+<title>잔야(가제) — 1단계 맛보기 v2.67</title>
 <style>
 html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:none;
   font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#ece1cc;
@@ -408,7 +408,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
     <div class="tl-en">JANYA</div>
     <div class="tl-sub">The Lingering Night</div>
   </div>
-  <div id="tTop"><span class="btn" id="bDex">도감</span><span class="note">맛보기 v2.66 · 그림 AI(제미나이)</span></div>
+  <div id="tTop"><span class="btn" id="bDex">도감</span><span class="note">맛보기 v2.67 · 그림 AI(제미나이)</span></div>
   <div id="tFoot">
     <div class="btn big" id="bStart">누르면 시작</div>
     <div id="best"></div>
@@ -864,6 +864,9 @@ const GD={"BLD_RAW":[[0,[[-28,-128],[-28,-130],[-27,-130],[-25,-174],[-31,-174],
 // 남산 지역 필드 데이터(61번 서울 5지역): 건물(층수, 꼭짓점) · BT(0 보통·1 전통·2 담장) · 가게(x,z,업종 — 이름은 업종 이름으로) · 길
 // © OpenStreetMap contributors (ODbL), Overpass API 2026-11-18. 원점 37.5512,126.9882 · 1단위 ≈ 1.2m
 const NS={"BLD_RAW":[[0,[[-47,14],[-46,-5],[-64,-5],[-64,13]]],[0,[[-63,-107],[-55,-111],[-61,-123],[-69,-119]]],[0,[[-56,-79],[-43,-77],[-42,-81],[-55,-82]]],[0,[[-58,-96],[-57,-92],[-50,-95],[-49,-96],[-50,-97],[-56,-110],[-63,-105]]],[0,[[-69,0],[-65,0],[-64,-5],[-68,-5]]],[0,[[-70,-10],[-67,-9],[-67,-13],[-70,-13]]],[0,[[-46,6],[-33,6],[-33,-5],[-45,-5]]],[0,[[3,-67],[14,-67],[14,-72],[3,-72]]],[0,[[-64,-73],[-59,-77],[-61,-80],[-66,-76]]],[0,[[-60,-81],[-57,-82],[-60,-85],[-62,-84]]],[0,[[-42,-43],[-41,-41],[-39,-41],[-38,-43],[-39,-45],[-41,-45]]],[0,[[20,-135],[20,-136],[18,-138],[14,-134],[18,-130],[22,-136]]]],"BT":[0,0,0,0,0,0,0,0,0,0,0,0],"SHOPS_RAW":"5,7,fast_food,;6,-6,gift,;23,-3,cafe,;-24,12,restaurant,;-8,7,bar,;-15,16,restaurant,;-16,13,fast_food,;-18,16,fast_food,;-13,14,restaurant,;-18,18,restaurant,;-11,15,cafe,;-15,19,restaurant,;9,4,restaurant,;14,11,cafe,;-11,-11,convenience,;-56,-101,restaurant,","NAMES_RAW":"","B":{"x0":-120,"z0":-150,"w":240,"h":300,"ka":2.4},"SC":[45,95],"SCR":24,"ZONE":[5,-55],"ZR":26,"ROADS_RAW":"service|||126.0,-8.6 116.0,-10.0 110.0,-10.0 99.0,-10.0 92.0,-9.0 82.0,-8.0 66.0,-6.0;service||yes|126.0,-2.6 122.0,-2.0 114.0,0.0 106.0,3.0 94.0,10.0 86.0,14.0 79.0,19.0 71.0,24.0 54.0,36.0 46.0,41.0 38.0,48.0 33.0,53.0 27.0,58.0 16.0,71.0 0.0,86.0 -11.0,95.0 -24.0,106.0 -29.0,111.0 -34.0,116.0 -39.0,121.0 -42.0,125.0 -45.0,130.0 -48.0,135.0 -50.0,141.0 -52.0,146.0 -53.0,151.0 -53.7,156.0;service|||97.0,-28.0 64.0,-23.0 43.0,-22.0;service|||126.0,-23.3 97.0,-28.0;pedestrian|||-4.0,22.0 28.0,12.0 27.0,9.0 31.0,8.0 49.0,3.0 66.0,-2.0 68.0,4.0 48.0,10.0 47.0,12.0 14.0,21.0 16.0,26.0 5.0,29.0 4.0,25.0 0.0,26.0 -3.0,27.0 -4.0,22.0;pedestrian|||28.0,-11.0 28.0,-9.0 31.0,8.0 49.0,3.0 46.0,-9.0 44.0,-15.0 28.0,-11.0;pedestrian|||-35.0,-58.0 -34.0,-56.0 -35.0,-53.0 -37.0,-51.0 -42.0,-49.0 -48.0,-47.0 -48.0,-42.0 -46.0,-37.0 -41.0,-35.0 -37.0,-37.0 -28.0,-38.0 -24.0,-37.0 -21.0,-28.0 -18.0,-29.0 6.0,-36.0 11.0,-37.0 8.0,-38.0 6.0,-40.0 6.0,-44.0 9.0,-46.0 30.0,-50.0 32.0,-51.0 34.0,-54.0 35.0,-56.0 43.0,-54.0 45.0,-55.0 47.0,-57.0 47.0,-61.0 46.0,-64.0 43.0,-66.0 39.0,-67.0 40.0,-70.0 39.0,-70.0 33.0,-71.0 34.0,-75.0 1.0,-79.0 -3.0,-78.0 -15.0,-67.0 -31.0,-61.0 -35.0,-58.0;pedestrian|||46.0,-9.0 64.0,-14.0 66.0,-6.0 66.0,-2.0 49.0,3.0 46.0,-9.0","CROSS_RAW":"","WATER":[],"STYLE":"mount","FOREST":1};
+
+// v2.67 결투 의례장 — 1대1 전용 대칭 맵(tools/mk_arena.py로 만듦). 원점 점대칭: 진영 (0,-112)·(0,112)
+const AR={"BLD_RAW":[[1,[[-27,-98],[-12,-98],[-12,-68],[-27,-68]]],[1,[[27,98],[12,98],[12,68],[27,68]]],[1,[[12,-98],[27,-98],[27,-68],[12,-68]]],[1,[[-12,98],[-27,98],[-27,68],[-12,68]]],[1,[[-27,-54],[-12,-54],[-12,-24],[-27,-24]]],[1,[[27,54],[12,54],[12,24],[27,24]]],[1,[[12,-54],[27,-54],[27,-24],[12,-24]]],[1,[[-12,54],[-27,54],[-27,24],[-12,24]]],[0,[[-24,-131],[24,-131],[24,-127],[-24,-127]]],[0,[[24,131],[-24,131],[-24,127],[24,127]]],[0,[[-30,-120],[-26,-120],[-26,-104],[-30,-104]]],[0,[[30,120],[26,120],[26,104],[30,104]]],[0,[[26,-120],[30,-120],[30,-104],[26,-104]]],[0,[[-26,120],[-30,120],[-30,104],[-26,104]]],[0,[[-60,-110],[-56,-110],[-56,-14],[-60,-14]]],[0,[[60,110],[56,110],[56,14],[60,14]]],[0,[[56,-110],[60,-110],[60,-14],[56,-14]]],[0,[[-56,110],[-60,110],[-60,14],[-56,14]]],[1,[[14,2],[24,2],[24,12],[14,12]]],[1,[[-14,-2],[-24,-2],[-24,-12],[-14,-12]]]],"BT":[1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,1,1],"SHOPS_RAW":"","NAMES_RAW":"","B":{"x0":-88,"z0":-152,"w":176,"h":304,"ka":2.4},"SC":[0,-112],"SCR":14,"ZONE":[0,0],"ZR":10,"ROADS_RAW":"footway|||0,-118 0,118;footway|||-39,-112 -39,112;footway|||39,-112 39,112;footway|||-39,-61 39,-61;footway|||-39,61 39,61;footway|||-39,-18 39,-18;footway|||-39,18 39,18","CROSS_RAW":"","WATER":[],"STYLE":"palace","FIRES":[[0,-112],[0,112]]};
 
 // 명동 지역 필드 — 명동 시험 2(dot2.js)의 입체 배경을 게임에 넣는 모듈 (2026-11-13)
 // 건물·가게 위치: © OpenStreetMap contributors (ODbL). 상호는 비튼 이름(claude/22). 1단위 ≈ 1.2m (실제 거리)
@@ -1603,6 +1606,8 @@ const FIELDS={
   hongdae:{name:'홍대 밤거리',boss:'bibi',mids:['giltal','agwi','dueok'],mobs:['gwijol','yeongno','dfire'],star:2,desc:'밤마다 귀신 무리가 노는 거리',data:()=>HD},
   seongsu:{name:'성수 공장골목',boss:'imugi',mids:['bulgasari','mulgwi','jireongi'],mobs:['yagwang','gangcheol','mokrang'],star:3,desc:'쇠와 물의 땅 · 공장과 수제화 골목',data:()=>SS},
   gyeong:{name:'경복궁',boss:'haechi',mids:['tiger','gyoryong','mulgoe'],mobs:['bulsae','hwama','imae'],star:4,desc:'왕의 자리 · 궁궐의 불막이',data:()=>GD},
+  // v2.67 결투 전용(1대1) — 사냥 지도 목록(FKEYS)엔 없음. 점대칭이라 양쪽 진영이 똑같다
+  arena:{name:'결투 의례장',boss:'dokkaebi',mids:['gumiho','jine','yagwangK'],mobs:['jineS','fox','mangryang'],star:1,desc:'돌 조각을 두고 벌이는 저승의 의례',data:()=>AR,duel:1},
   namsan:{name:'남산',boss:'datbal',mids:['bulgae','gureong','jangseung'],mobs:['bulgaeS','gureongS'],star:5,desc:'하늘·숲·탑 · 마지막 땅',data:()=>NS}
 };
 const FKEYS=['myeong','hongdae','seongsu','gyeong','namsan'];
@@ -2180,6 +2185,7 @@ const MOOD={
   hongdae:{fog:0x110f26,sky:0x7a66d8,gnd:0x241e3a,moon:0xb4a4ff,hemiI:.6,moonI:.85,sat:.62,m:{n:60,c:[0x7affb0,0xc890ff],vy:.06,sz:.38,op:.95,wob:1.1}}, // 보라 밤 · 떠도는 도깨비불
   seongsu:{fog:0x1c130c,sky:0xc0905a,gnd:0x3a2618,moon:0xffbc80,hemiI:.62,moonI:.9,sat:.56,m:{n:110,c:[0xffa040,0xffd070],vy:.7,sz:.17,op:.95,wob:.5}}, // 용광로 빛 · 쇳가루 불티
   gyeong:{fog:0x0b1424,sky:0x6a8ad0,gnd:0x1e2638,moon:0xd4e4ff,hemiI:.58,moonI:.9,sat:.52,m:{n:60,c:[0xd8e8ff,0xa8c8ff],vy:-.12,sz:.2,op:.8,wob:.4}}, // 푸른 달빛 · 서리 먼지
+  arena:{fog:0x1a0e14,sky:0x8a6a8a,gnd:0x2a1a22,moon:0xffc0b0,hemiI:.64,moonI:.9,sat:.55,m:{n:70,c:[0xffb070,0xff8a60],vy:.4,sz:.2,op:.8,wob:.5}}, // v2.67 결투 의례장 · 붉은 재
   namsan:{fog:0x0c1612,sky:0x6aa090,gnd:0x1a2a22,moon:0xc4ecdc,hemiI:.6,moonI:.9,sat:.5,m:{n:120,c:[0x8a8a96,0xb0b0bc],vy:-.5,sz:.28,op:.7,wob:.6}}}; // 숲 안개 · 검은 눈
 const moodOf=k=>MOOD[k]||{...NIGHT,m:null};
 let MOTES=null;
@@ -2208,7 +2214,7 @@ function getMyeong(key='myeong'){ if(FBUILT[key]){ MY=FBUILT[key]; return MY; }
   let bz=null; if(FD.ZONE){ let bs=-1e9; const [zx,zz]=FD.ZONE, zr=FD.ZR||40; for(let x=zx-zr;x<=zx+zr;x+=2) for(let z=zz-zr;z<=zz+zr;z+=2){ if(MY.blocked(x,z)) continue; const sc=Math.min(12,MY.distAt(x,z))-Math.hypot(x-zx,z-zz)*.03; if(sc>bs){ bs=sc; bz=[x,z]; } } }
   bz=bz||MY.openSpot(st,85)||[st[0],st[1]-80]; MY.zone={x:bz[0],z:bz[1],r:10};
   // v2.9.2: 모닥불 더 많이 — 보스 가는 길 중간 1곳 + 필드 전체에 고르게(가장 먼 빈터부터). 명동 6 · 수원 10 (기획자 평: 안전지대에서 밀린 성장을 몰아 고르기)
-  MY.fires=[MY.fire]; { const S0=MY.fire, Z=MY.zone, B=MY.bounds, free=(x,z)=>!MY.blocked(x,z), N=Math.min(10,5+Math.round(B.w*B.h/55000));
+  MY.fires=[MY.fire]; if(FD.FIRES){ MY.fires=FD.FIRES.map(([x,z])=>({x,z})); MY.fire=MY.fires[0]; } else { const S0=MY.fire, Z=MY.zone, B=MY.bounds, free=(x,z)=>!MY.blocked(x,z), N=Math.min(10,5+Math.round(B.w*B.h/55000));
     const open=(x,z)=>{ let c=0; for(let k=0;k<12;k++){ const a=k/12*6.283; for(const r of [3,5,7]) if(free(x+Math.cos(a)*r,z+Math.sin(a)*r)) c++; } return c; };
     const ok=(x,z)=>x>=B.x0+EDGE_FADE&&z>=B.z0+EDGE_FADE&&x<=B.x0+B.w-EDGE_FADE&&z<=B.z0+B.h-EDGE_FADE&&free(x,z)&&Math.hypot(x-Z.x,z-Z.z)>=Z.r+22;
     { const tx=S0.x+(Z.x-S0.x)*.55, tz=S0.z+(Z.z-S0.z)*.55; let best=null,bs=-1e9; for(let x=tx-16;x<=tx+16;x+=2) for(let z=tz-16;z<=tz+16;z+=2){ if(!ok(x,z)||Math.hypot(x-S0.x,z-S0.z)<30) continue; const c=open(x,z), sc=c-Math.hypot(x-tx,z-tz)*.15; if(c>=28&&sc>bs){ bs=sc; best={x,z}; } } if(best) MY.fires.push(best); }
@@ -5865,7 +5871,7 @@ function mpClear(){ for(const G of MP.ghosts.values()){ scene.remove(G.g); } MP.
    · 멸망전 = 결투장(1대1~3대3)에 장비를 하나씩 걸고 겨룸. 건 장비는 같은 등급끼리만(방 이름에 등급이 붙어 다른 등급끼린 못 만남) ·
      이긴 팀이 진 팀이 건 장비를 다 가져감(한 사람씩 나눠) · 판 안에선 장비 능력치가 꺼져 실력으로만 · 판정 서버가 없어 친구 방 코드로만 ·
      판 도중 나가면 건 장비를 잃음(지고 나가서 지키는 일 막기) · 혼자 연습(상대를 한 번도 못 만남)이면 돌려받음 */
-const DUELM={'1':{n:'1대1',f:'myeong',mid:1,T:480},'2':{n:'2대2',f:'hongdae',mid:2,T:600},'3':{n:'3대3',f:'seongsu',mid:3,T:780}};
+const DUELM={'1':{n:'1대1',f:'arena',mid:1,T:480},'2':{n:'2대2',f:'hongdae',mid:2,T:600},'3':{n:'3대3',f:'seongsu',mid:3,T:780}};
 const DUEL_RW={w:{sh:800,mat:3,fame:10},l:{sh:300,mat:1,fame:3}};
 const betItem=()=>{ const id=(SV.duelUi||{}).bid; return id&&SV.bag.find(x=>x.id===id&&!Object.values(SV.eq).includes(x.id)&&!x.lk)||null; };
 const gIdx=it=>Math.max(0,GRADE.indexOf(gGr(it)));
