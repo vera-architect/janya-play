@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Nanum+Brush+Script&family=Noto+Serif+KR:wght@700&display=swap">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>잔야(가제) — 1단계 맛보기 v2.65</title>
+<title>잔야(가제) — 1단계 맛보기 v2.66</title>
 <style>
 html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:none;
   font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#ece1cc;
@@ -408,7 +408,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
     <div class="tl-en">JANYA</div>
     <div class="tl-sub">The Lingering Night</div>
   </div>
-  <div id="tTop"><span class="btn" id="bDex">도감</span><span class="note">맛보기 v2.65 · 그림 AI(제미나이)</span></div>
+  <div id="tTop"><span class="btn" id="bDex">도감</span><span class="note">맛보기 v2.66 · 그림 AI(제미나이)</span></div>
   <div id="tFoot">
     <div class="btn big" id="bStart">누르면 시작</div>
     <div id="best"></div>
@@ -1720,7 +1720,7 @@ const CHARS={
   clerk:{name:'알바생 서지우',short:'알바생',start:'barcode',passive:'야간 근무',pdesc:'1분 버틸 때마다 공격 간격 -3% (최대 -30%)',
     lock:'구미호를 한 번 보내면',unlock:()=>!!SV.cleared.namsan,img:'img/clerk2_front.webp',
     // v2.58 (11-19 기획자 ㄱ): 여자로 보이게 다시 그림 — 긴 포니테일·짧은 회색 후드·노란 조끼·슬림 청바지. 걷기 6장은 새로 뽑을 때까지 정지 그림 + 걸음 흔들기
-    views:{front:['img/clerk2_front.webp',null,255,520],side:['img/clerk2_side.webp',null,226,520],back:['img/clerk2_back.webp',null,224,520]},light:0xbfe4ff},
+    views:{front:['img/clerk2_front.webp',null,255,520],side:['img/clerk2_side_w2.webp','img/clerk2_side_w2_g.webp',254,520,{n:6,pre:'img/clerk2_side_w',w:254,h:520,glow:true}],back:['img/clerk2_back.webp',null,224,520]},light:0xbfe4ff},
   taxi:{name:'택시 기사 최만수',short:'택시 기사',start:'horn',passive:'25년 운전',pdesc:'한 방향으로 달릴수록 빨라지고, 2초 넘게 달리면 몸으로 들이받는다',
     lock:'불가사리를 한 번 보내면',unlock:()=>!!SV.cleared.seoulst,img:'img/taxi_front.webp',
     views:{front:['img/taxi_front.webp',null,368,520,{n:6,pre:'img/taxi_front_w',w:384,h:520,flip:true}],side:['img/taxi_side.webp',null,375,520,{n:6,pre:'img/taxi_side_w',w:387,h:520}],back:['img/taxi_back.webp',null,370,520,{n:6,pre:'img/taxi_back_w',w:363,h:520}]},light:0xffb060},
@@ -1730,7 +1730,7 @@ const CHARS={
   seoyun:{name:'라디오 DJ 백서윤',short:'라디오 DJ',start:'flute',start2:'orb',passive:'새벽 두 시 방송',pdesc:'1분 버틸 때마다 기술 범위 +5% (최대 +50%)',lock:'남산 파이널(닷발 괴물)을 한 번 보내면',unlock:()=>!!((SV.deep&&SV.deep.namsan)||(SV.ledger&&SV.ledger.bosses&&(SV.ledger.bosses.datbal||SV.ledger.bosses.queen))),img:'img/seoyun_front.webp',
     views:{front:['img/seoyun_front.webp','img/seoyun_front_g.webp',256,520],side:['img/seoyun_side_w2.webp','img/seoyun_side_w2_g.webp',246,520,{n:6,pre:'img/seoyun_side_w',w:246,h:520,glow:true}],back:['img/seoyun_back.webp',null,255,520]},light:0xd8b0ff},
   haram:{name:'한복 대여점 소하람',short:'한복 대여점',start:'fan',passive:'옷 매무새',pdesc:'5초 동안 안 맞으면 매무새가 서서 공격 2배 (맞으면 풀림)',lock:'경복궁 파이널(해치)을 한 번 보내면',unlock:()=>!!((SV.deep&&SV.deep.gyeong)||(SV.ledger&&SV.ledger.bosses&&SV.ledger.bosses.haechi)),img:'img/haram_front.webp',
-    views:{front:['img/haram_front.webp','img/haram_front_g.webp',266,520],side:['img/haram_side.webp','img/haram_side_g.webp',237,520],back:['img/haram_back.webp',null,278,520]},light:0xffc4d4}
+    views:{front:['img/haram_front.webp','img/haram_front_g.webp',266,520],side:['img/haram_side_w2.webp','img/haram_side_w2_g.webp',304,520,{n:6,pre:'img/haram_side_w',w:304,h:520,glow:true}],back:['img/haram_back.webp',null,278,520]},light:0xffc4d4}
 };
 /* v2.58 1인칭 혼잣말(60번 3장 · 65번 4·9장) — 판이 시작되고 조금 뒤 화면 아래에 한 줄. 판마다 다음 줄(SV.mono[캐릭터]).
    1·2막 규칙: 자기 이야기만 · 가족·특정인·인연 보스 기술 모티프 없음 · 「작은 비정함」 한 줄은 상처받은 사람을 가리키지 않게 */
