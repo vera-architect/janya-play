@@ -4295,6 +4295,8 @@ const DUEL_RW={w:{sh:800,mat:3,fame:10},l:{sh:300,mat:1,fame:3}};
 const betItem=()=>{ const id=(SV.duelUi||{}).bid; return id&&SV.bag.find(x=>x.id===id&&!Object.values(SV.eq).includes(x.id)&&!x.lk)||null; };
 const gIdx=it=>Math.max(0,GRADE.indexOf(gGr(it)));
 function betLost(){ if(!SV.betHold) return; const it=SV.betHold; SV.betHold=null; save(); setTimeout(()=>toast('🔥 판을 떠나 건 장비를 잃었다',gTag(it)),600); }
+// v2.64 봇 잰 값(11-19 무인 ㄷ): 사람 피해 8+2.2×Lv 이면 Lv1 끼리 쓰러지기까지 ~38초 · Lv5 ~20초로 너무 길었다 → 20+2×Lv (Lv1 ~18초 · Lv5 ~13초 · Lv10 ~10초 · Lv15부터 1초 상한 12%로 8.3초 바닥)
+const DUEL_DPS0=20, DUEL_DPSL=2;
 const DUEL_HP=3, DUEL_CAP=.12, DG_R=6.5, DG_HIT=4.6;
 /* ============ v2.62 결투장 2단계 (62번 · 기획자 11-18 20:37~20:47 · 11-19 10:40 「나머지 일도 다 해둬」) ============
    ① 팀장이 수비 보스 고르기: 결투 창에서 내가 한 번이라도 보낸 보스 중 고름(SV.duelUi.gk) → 팀에서 peer 이름이 가장 앞선 사람(팀장)의 것을 모두가 씀(presence gk). 모양·이름만 바뀌고 체력·세기는 자리(중간/파이널)대로 → 고른 보스로 세지지 않음
@@ -4479,7 +4481,7 @@ function mpTick(dt){ const R=MP.room; if(!R) return; const area=mpArea(), now=pe
     G.g.userData.m.material.opacity=pr.h===0?.35:.92;
     // 내가 때리는 것: 불씨를 든 사람이 가까우면 내 무기가 저절로 친다(모닥불 고리 안은 서로 못 때림)
     const foeD=S&&S.duel?(S.duel.m==='br'||pr.tm!==S.duel.tm)&&pr.dd!==1&&!(S.duel.dead>0):false;
-    if((foeD||(hold&&!pty&&!(S&&S.duel)))&&!pr.s&&S.phase==='play'&&!S.inSafe&&pr.h!==0&&Math.hypot(gp.x-P.x,gp.z-P.z)<PVP_R){ const dps=8+(S.lv|0)*2.2; if(foeD) DUELH[p.peer]=(DUELH[p.peer]||0)+dps*dt; else MPF.hit[p.peer]=(MPF.hit[p.peer]||0)+dps*dt;
+    if((foeD||(hold&&!pty&&!(S&&S.duel)))&&!pr.s&&S.phase==='play'&&!S.inSafe&&pr.h!==0&&Math.hypot(gp.x-P.x,gp.z-P.z)<PVP_R){ const dps=foeD?DUEL_DPS0+(S.lv|0)*DUEL_DPSL:8+(S.lv|0)*2.2; if(foeD) DUELH[p.peer]=(DUELH[p.peer]||0)+dps*dt; else MPF.hit[p.peer]=(MPF.hit[p.peer]||0)+dps*dt;
       MP.hitFx[p.peer]=(MP.hitFx[p.peer]||0)+dps*dt; if(now-(G.fxT||0)>320){ G.fxT=now; burst(gp.x,1,gp.z,3,2); dnum(gp.x,1.7,gp.z,Math.max(1,Math.round(MP.hitFx[p.peer])),'mid'); MP.hitFx[p.peer]=0; } } }
   for(const [k,G] of MP.ghosts) if(!live.has(k)){ scene.remove(G.g); MP.ghosts.delete(k); }
   { const hv=$('holdV'); if(hv){ const on=!!(inF&&S.emG&&S.emG.length&&foe>0&&!S.inSafe&&S.phase==='play'); if(hv.classList.contains('on')!==on) hv.classList.toggle('on',on); } }
