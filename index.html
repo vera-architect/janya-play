@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Nanum+Brush+Script&family=Noto+Serif+KR:wght@700&display=swap">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>잔야(가제) — 1단계 맛보기 v2.64</title>
+<title>잔야(가제) — 1단계 맛보기 v2.65</title>
 <style>
 html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:none;
   font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#ece1cc;
@@ -408,7 +408,7 @@ html,body{margin:0;height:100%;background:#07060c;overflow:hidden;touch-action:n
     <div class="tl-en">JANYA</div>
     <div class="tl-sub">The Lingering Night</div>
   </div>
-  <div id="tTop"><span class="btn" id="bDex">도감</span><span class="note">맛보기 v2.64 · 그림 AI(제미나이)</span></div>
+  <div id="tTop"><span class="btn" id="bDex">도감</span><span class="note">맛보기 v2.65 · 그림 AI(제미나이)</span></div>
   <div id="tFoot">
     <div class="btn big" id="bStart">누르면 시작</div>
     <div id="best"></div>
@@ -3199,8 +3199,9 @@ function drawSkills2(t){
   [yutB,totemB,postB,kiteB,topB,arrowB,ropeB,pepperB,waveB,rocketB,popMaskB,popFanB].forEach(b=>b.end());
 }
 
+// v2.65 (기획자 11-19 19:43 ㄱ · 71번 1장 블라인드 3차): 「김」「종이 소리」는 사람 일상으로 읽혀 자연 쪽으로 바꿈
 // v2.53 (기획자 11-19 · 65번 1장): 레벨업 때 스치는 것 = 누구 것인지 모를 흐릿한 감각 조각(빛·냄새·소리). 사람·장소 흔적 없음
-const MEMORIES=['흐린 주황빛이 잠깐 번진다.','비 냄새가 스친다.','멀리서 낮은 울림이 들린다.','미지근한 김이 손끝에 닿는다.','눈부신 흰빛이 한 번 깜빡인다.','달큰한 냄새가 났다가 사라진다.','쇠 냄새가 난다.','무언가 똑, 똑 떨어지는 소리.','푸른 빛이 아른거린다.','젖은 흙냄새.','바람이 웅웅 우는 소리.','따뜻한 빛이 등에 닿았다가 식는다.','종이 스치는 소리.','타는 냄새가 아주 옅게 난다.','물결 소리 같은 것이 들린다.','차가운 빛이 길게 늘어진다.'];
+const MEMORIES=['흐린 주황빛이 잠깐 번진다.','비 냄새가 스친다.','멀리서 낮은 울림이 들린다.','차가운 물방울이 손등에 떨어진다.','눈부신 흰빛이 한 번 깜빡인다.','달큰한 냄새가 났다가 사라진다.','쇠 냄새가 난다.','무언가 똑, 똑 떨어지는 소리.','푸른 빛이 아른거린다.','젖은 흙냄새.','바람이 웅웅 우는 소리.','따뜻한 빛이 등에 닿았다가 식는다.','풀잎이 바람에 쓸리는 소리.','타는 냄새가 아주 옅게 난다.','물결 소리 같은 것이 들린다.','차가운 빛이 길게 늘어진다.'];
 const memNext=()=>{ if(!S) return MEMORIES[0]; S.memI=((S.memI||0)+1)%MEMORIES.length; return MEMORIES[S.memI]; };
 
 /* ============ 모닥불지기 업그레이드 ============ */
